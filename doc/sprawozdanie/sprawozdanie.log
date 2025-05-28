@@ -1,0 +1,141 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=latex 2025.5.28)  28 MAY 2025 18:14
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**sprawozdanie.tex
+(./sprawozdanie.tex
+LaTeX2e <2024-11-01> patch level 2
+L3 programming layer <2025-01-18>
+(./classrep.cls
+Document Class: classrep 2009/11/27 ICS Class Assignment Report
+(/usr/share/texmf/tex/latex/mwcls/mwart.cls
+Document Class: mwart 2017/05/13 v0.75 A LaTeX document class (MW)
+*** Beta version. Formatting may change
+*** in future versions of this class.
+(/usr/share/texmf/tex/latex/mwcls/mw12.clo
+File: mw12.clo 2017/05/13 v0.75 A document class size option (MW)
+)
+\@parindent=\dimen141
+\c@part=\count196
+\c@section=\count197
+\c@subsection=\count198
+\c@subsubsection=\count199
+\c@paragraph=\count266
+\c@subparagraph=\count267
+\c@figure=\count268
+\c@table=\count269
+\abovecaptionskip=\skip49
+\belowcaptionskip=\skip50
+\bibindent=\dimen142
+)
+(/usr/share/texmf/tex/latex/polski/polski.sty
+Package: polski 2021/08/25 v1.3.6 Polish language package
+
+(/usr/share/texmf/tex/latex/base/ot4enc.def
+File: ot4enc.def 2021/04/29 v2.0v Standard LaTeX file
+Now handling font encoding OT4 ...
+... no UTF-8 mapping file for font encoding OT4
+))
+(/usr/share/texmf/tex/latex/url/url.sty
+\Urlmuskip=\muskip17
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+))
+(/usr/share/texmf/tex/latex/base/inputenc.sty
+Package: inputenc 2024/02/08 v1.3d Input encoding file
+\inpenc@prehook=\toks17
+\inpenc@posthook=\toks18
+)
+(/usr/share/texmf/tex/latex/graphics/color.sty
+Package: color 2024/06/23 v1.3e Standard LaTeX Color (DPC)
+
+(/usr/share/texmf/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package color Info: Driver file: dvips.def on input line 149.
+
+(/usr/share/texmf/tex/latex/graphics-def/dvips.def
+File: dvips.def 2022/09/22 v3.1e Graphics/color driver for dvips
+)
+(/usr/share/texmf/tex/latex/graphics/dvipsnam.def
+File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
+)
+(/usr/share/texmf/tex/latex/graphics/mathcolor.ltx))
+   defining Unicode char U+00A0 (decimal 160)
+LaTeX Font Info:    Trying to load font information for OT4+cmr on input line 2
+3.
+
+(/usr/share/texmf/tex/latex/polski/ot4cmr.fd
+File: ot4cmr.fd 2008/02/24 v1.2.1 Font defs for fonts PL (MW)
+)
+(/usr/share/texmf/tex/latex/l3backend/l3backend-dvips.def
+File: l3backend-dvips.def 2024-05-08 L3 backend support: dvips
+\l__pdf_internal_box=\box52
+\l__pdf_backend_content_box=\box53
+\l__pdf_backend_model_box=\box54
+\g__pdf_backend_annotation_int=\count270
+\g__pdf_backend_link_int=\count271
+\g__pdf_backend_link_sf_int=\count272
+) (./sprawozdanie.aux)
+\openout1 = `sprawozdanie.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT4/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+
+Underfull \hbox (badness 10000) in paragraph at lines 24--24
+
+ []
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 24.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 24.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 24.
+
+Underfull \hbox (badness 10000) in paragraph at lines 24--24
+
+ []
+
+LaTeX Font Info:    Trying to load font information for OT4+cmtt on input line 
+24.
+(/usr/share/texmf/tex/latex/polski/ot4cmtt.fd
+File: ot4cmtt.fd 2008/02/24 v1.2.1 Font defs for fonts PL (MW)
+)
+
+[1
+
+]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 90.
+
+
+[2] (./sprawozdanie.aux)
+ ***********
+LaTeX2e <2024-11-01> patch level 2
+L3 programming layer <2025-01-18>
+ ***********
+ ) 
+Here is how much of TeX's memory you used:
+ 1268 strings out of 474238
+ 20469 string characters out of 5742850
+ 411671 words of memory out of 5000000
+ 24379 multiletter control sequences out of 15000+600000
+ 567182 words of font info for 58 fonts, out of 8000000 for 9000
+ 475 hyphenation exceptions out of 8191
+ 58i,7n,71p,193b,335s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+Output written on sprawozdanie.dvi (2 pages, 6324 bytes).
