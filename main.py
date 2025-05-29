@@ -1,542 +1,356 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
 from DataLoader import DataLoader
 from NeutralNetworkModel import EnhancedNeuralNetworkModel
-from OutlierDetector import OutlierDetector
-import torch
-import os
+
+
+def plot_training_history(history):
+    """Wykres historii trenowania"""
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+
+    # Loss
+    ax1.plot(history.history['loss'], label='Training Loss')
+    ax1.plot(history.history['val_loss'], label='Validation Loss')
+    ax1.set_title('Model Loss')
+    ax1.set_xlabel('Epoka')
+    ax1.set_ylabel('Loss')
+    ax1.legend()
+    ax1.grid(True)
+
+    # MAE
+    ax2.plot(history.history['mae'], label='Training MAE')
+    ax2.plot(history.history['val_mae'], label='Validation MAE')
+    ax2.set_title('Model MAE')
+    ax2.set_xlabel('Epoka')
+    ax2.set_ylabel('MAE')
+    ax2.legend()
+    ax2.grid(True)
+
+    # Learning Rate
+    ax3.plot(history.history['lr'])
+    ax3.set_title('Learning Rate')
+    ax3.set_xlabel('Epoka')
+    ax3.set_ylabel('Learning Rate')
+    ax3.grid(True)
+
+    # Ostatni wykres - pusty lub dodatkowe metryki
+    ax4.text(0.5, 0.5, 'Dodatkowe metryki\nmogą być tutaj',
+             ha='center', va='center', transform=ax4.transAxes)
+
+    plt.tight_layout()
+    plt.savefig('training_history.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_error_distributions(Y_test_original, Y_test_corrected, title_suffix=""):
+    """Porównanie rozkładów błędów przed i po korekcji"""
+
+    # Obliczenie błędów absolutnych
+    errors_original = np.sqrt(Y_test_original[:, 0] ** 2 + Y_test_original[:, 1] ** 2)
+    errors_corrected = np.sqrt(Y_test_corrected[:, 0] ** 2 + Y_test_corrected[:, 1] ** 2)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5))
+
+    # Histogram błędów
+    ax1.hist(errors_original, bins=50, alpha=0.7, label='Przed korekcją', density=True)
+    ax1.hist(errors_corrected, bins=50, alpha=0.7, label='Po korekcji', density=True)
+    ax1.set_xlabel('Błąd [m]')
+    ax1.set_ylabel('Gęstość')
+    ax1.set_title(f'Rozkład błędów {title_suffix}')
+    ax1.legend()
+    ax1.grid(True)
+
+    # Dystrybuanta CDF
+    sorted_orig = np.sort(errors_original)
+    sorted_corr = np.sort(errors_corrected)
+    cdf_orig = np.arange(1, len(sorted_orig) + 1) / len(sorted_orig)
+    cdf_corr = np.arange(1, len(sorted_corr) + 1) / len(sorted_corr)
+
+    ax2.plot(sorted_orig, cdf_orig, label='Przed korekcją', linewidth=2)
+    ax2.plot(sorted_corr, cdf_corr, label='Po korekcji', linewidth=2)
+    ax2.set_xlabel('Błąd [m]')
+    ax2.set_ylabel('Dystrybuanta F(x)')
+    ax2.set_title(f'Dystrybuanta błędów {title_suffix}')
+    ax2.legend()
+    ax2.grid(True)
+
+    # Scatter plot błędów X vs Y
+    ax3.scatter(Y_test_original[:, 0], Y_test_original[:, 1], alpha=0.5, label='Przed korekcją', s=1)
+    ax3.scatter(Y_test_corrected[:, 0], Y_test_corrected[:, 1], alpha=0.5, label='Po korekcji', s=1)
+    ax3.set_xlabel('Błąd X [m]')
+    ax3.set_ylabel('Błąd Y [m]')
+    ax3.set_title(f'Błędy X vs Y {title_suffix}')
+    ax3.legend()
+    ax3.grid(True)
+    ax3.axis('equal')
+
+    plt.tight_layout()
+    plt.savefig(f'error_analysis_{title_suffix.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
+    plt.show()
+
+    return sorted_corr, cdf_corr
+
+
+def calculate_metrics(Y_true, Y_pred):
+    """Obliczenie metryk błędów"""
+    errors = np.sqrt(Y_true[:, 0] ** 2 + Y_true[:, 1] ** 2)
+    errors_pred = np.sqrt(Y_pred[:, 0] ** 2 + Y_pred[:, 1] ** 2)
+
+    metrics = {
+        'mean_error': np.mean(errors),
+        'median_error': np.median(errors),
+        'std_error': np.std(errors),
+        'max_error': np.max(errors),
+        'rmse': np.sqrt(np.mean(errors ** 2)),
+        'mae': np.mean(errors),
+        'q95': np.percentile(errors, 95),
+        'q99': np.percentile(errors, 99)
+    }
+
+    return metrics, errors
+
+
+def save_cdf_to_excel(errors, filename):
+    """Zapisanie dystrybuanty do pliku Excel"""
+    sorted_errors = np.sort(errors)
+    df = pd.DataFrame({'error': sorted_errors})
+    df.to_excel(filename, index=False)
+    print(f"Dystrybuanta zapisana do {filename}")
 
 
 def main():
-    """
-    Główna funkcja do trenowania i ewaluacji sieci neuronowej
-    do korekcji błędów systemu pomiarowego
-    """
-    print("=== SYSTEM KOREKCJI BŁĘDÓW POMIAROWYCH Z WYKORZYSTANIEM SIECI NEURONOWEJ ===\n")
-
-    # ==============================================
-    # 1. ŁADOWANIE I PRZYGOTOWANIE DANYCH
-    # ==============================================
-    print("1. Ładowanie danych...")
+    print("=== SYSTEM KOREKCJI BŁĘDÓW UWB Z SIECIĄ NEURONOWĄ ===\n")
 
     try:
-        # Próba ładowania danych Excel (preferowane)
-        static_data, dynamic_data = DataLoader.load_data_excel()
+        # 1. Ładowanie i przygotowanie danych
+        print("1. Ładowanie danych...")
+        X_train, Y_train, X_test, Y_test, features = DataLoader.prepare_training_testing_data()
 
-        if static_data is not None and dynamic_data is not None:
-            print("✅ Dane Excel załadowane pomyślnie")
-            X_train, Y_train, features = DataLoader.prepare_data_excel(static_data)
-            X_test, Y_test, _ = DataLoader.prepare_data_excel(dynamic_data)
-            data_source = "Excel"
-        else:
-            raise Exception("Brak danych Excel")
+        print(f"\nCechy wejściowe ({len(features)}):")
+        for i, feature in enumerate(features):
+            print(f"  {i + 1}. {feature}")
+
+        # 2. Konfiguracja modeli
+        print("\n2. Konfiguracja modeli...")
+
+        # Model bez eliminacji outlierów
+        model_without_outlier = EnhancedNeuralNetworkModel(
+            hidden_layers=[128, 64, 32],
+            activation_function='relu',
+            num_of_inputs_neurons=X_train.shape[1],
+            num_of_outputs_neurons=2,
+            epochs=200,
+            learning_rate=0.001,
+            outlier_detection=False,
+            batch_size=64,
+            id=1
+        )
+
+        # Model z eliminacją outlierów
+        model_with_outlier = EnhancedNeuralNetworkModel(
+            hidden_layers=[128, 64, 32],
+            activation_function='relu',
+            num_of_inputs_neurons=X_train.shape[1],
+            num_of_outputs_neurons=2,
+            epochs=200,
+            learning_rate=0.001,
+            outlier_detection=True,
+            outlier_method='combined',
+            outlier_threshold=3.0,
+            batch_size=64,
+            id=2
+        )
+
+        # 3. Trenowanie modelu bez eliminacji outlierów
+        print("\n3. Trenowanie modelu BEZ eliminacji outlierów...")
+        history1 = model_without_outlier.train(X_train, Y_train)
+
+        # 4. Trenowanie modelu z eliminacją outlierów
+        print("\n4. Trenowanie modelu Z eliminacją outlierów...")
+        history2 = model_with_outlier.train(X_train, Y_train)
+
+        # 5. Testowanie modeli
+        print("\n5. Testowanie modeli...")
+
+        # Test modelu bez outlierów
+        mse1, predictions1 = model_without_outlier.test(X_test, Y_test)
+        Y_corrected1 = Y_test - predictions1  # Korekcja błędów
+
+        # Test modelu z outlierami
+        mse2, predictions2 = model_with_outlier.test(X_test, Y_test)
+        Y_corrected2 = Y_test - predictions2  # Korekcja błędów
+
+        print(f"\nMSE bez eliminacji outlierów: {mse1:.6f}")
+        print(f"MSE z eliminacją outlierów: {mse2:.6f}")
+
+        # 6. Analiza wyników
+        print("\n6. Analiza wyników...")
+
+        # Metryki oryginalnych błędów
+        metrics_orig, errors_orig = calculate_metrics(Y_test, Y_test)
+        print("\nMetryki oryginalnych błędów:")
+        for key, value in metrics_orig.items():
+            print(f"  {key}: {value:.4f}")
+
+        # Metryki po korekcji (bez outlierów)
+        metrics_corr1, errors_corr1 = calculate_metrics(Y_corrected1, Y_corrected1)
+        print("\nMetryki po korekcji (bez eliminacji outlierów):")
+        for key, value in metrics_corr1.items():
+            print(f"  {key}: {value:.4f}")
+
+        # Metryki po korekcji (z outlierami)
+        metrics_corr2, errors_corr2 = calculate_metrics(Y_corrected2, Y_corrected2)
+        print("\nMetryki po korekcji (z eliminacją outlierów):")
+        for key, value in metrics_corr2.items():
+            print(f"  {key}: {value:.4f}")
+
+        # 7. Wizualizacje
+        print("\n7. Generowanie wykresów...")
+
+        # Historia trenowania
+        plot_training_history(history1)
+        plot_training_history(history2)
+
+        # Porównanie rozkładów błędów
+        cdf_orig, _ = plot_error_distributions(Y_test, Y_test, "- Dane oryginalne")
+        cdf_corr1, _ = plot_error_distributions(Y_test, Y_corrected1, "- Bez eliminacji outlierów")
+        cdf_corr2, _ = plot_error_distributions(Y_test, Y_corrected2, "- Z eliminacją outlierów")
+
+        # 8. Zapis wyników
+        print("\n8. Zapisywanie wyników...")
+
+        # Zapisanie dystrybuant do Excel
+        save_cdf_to_excel(errors_orig, 'dystrybuanta_oryginalna.xlsx')
+        save_cdf_to_excel(errors_corr1, 'dystrybuanta_bez_outlierow.xlsx')
+        save_cdf_to_excel(errors_corr2, 'dystrybuanta_z_outlierami.xlsx')
+
+        # Zapisanie modeli
+        model_without_outlier.save_weights('model_bez_outlierow.pth')
+        model_with_outlier.save_weights('model_z_outlierami.pth')
+
+        # Zapisanie szczegółowych wyników
+        results_df = pd.DataFrame({
+            'original_error_x': Y_test[:, 0],
+            'original_error_y': Y_test[:, 1],
+            'corrected_error_x_no_outlier': Y_corrected1[:, 0],
+            'corrected_error_y_no_outlier': Y_corrected1[:, 1],
+            'corrected_error_x_with_outlier': Y_corrected2[:, 0],
+            'corrected_error_y_with_outlier': Y_corrected2[:, 1],
+            'prediction_x_no_outlier': predictions1[:, 0],
+            'prediction_y_no_outlier': predictions1[:, 1],
+            'prediction_x_with_outlier': predictions2[:, 0],
+            'prediction_y_with_outlier': predictions2[:, 1]
+        })
+        results_df.to_excel('wyniki_szczegolowe.xlsx', index=False)
+
+        # 9. Generowanie raportu końcowego
+        print("\n9. Generowanie raportu końcowego...")
+
+        # Zapisanie podsumowania do pliku tekstowego
+        with open('raport_podsumowanie.txt', 'w', encoding='utf-8') as f:
+            f.write("=== RAPORT KOŃCOWY - SYSTEM KOREKCJI BŁĘDÓW UWB ===\n\n")
+
+            f.write("1. ARCHITEKTURA SIECI NEURONOWEJ:\n")
+            f.write(f"   - Liczba warstw ukrytych: {len(model_without_outlier.hidden_layers)}\n")
+            f.write(f"   - Neurony w warstwach: {model_without_outlier.hidden_layers}\n")
+            f.write(f"   - Funkcja aktywacji: {model_without_outlier.activation_function}\n")
+            f.write(f"   - Neurony wejściowe: {model_without_outlier.num_of_inputs_neurons}\n")
+            f.write(f"   - Neurony wyjściowe: {model_without_outlier.num_of_outputs_neurons}\n")
+            f.write(f"   - Dropout rate: {model_without_outlier.dropout_rate}\n")
+            f.write(f"   - Batch size: {model_without_outlier.batch_size}\n")
+            f.write(f"   - Learning rate: {model_without_outlier.learning_rate}\n")
+            f.write(f"   - Liczba epok: {model_without_outlier.epochs}\n\n")
+
+            f.write("2. DANE TRENINGOWE I TESTOWE:\n")
+            f.write(f"   - Próbki treningowe: {X_train.shape[0]}\n")
+            f.write(f"   - Próbki testowe: {X_test.shape[0]}\n")
+            f.write(f"   - Liczba cech: {X_train.shape[1]}\n\n")
+
+            f.write("3. CECHY WEJŚCIOWE:\n")
+            for i, feature in enumerate(features):
+                f.write(f"   {i + 1}. {feature}\n")
+            f.write("\n")
+
+            f.write("4. WYNIKI MODELU BEZ ELIMINACJI OUTLIERÓW:\n")
+            f.write(f"   - MSE: {mse1:.6f}\n")
+            for key, value in metrics_corr1.items():
+                f.write(f"   - {key}: {value:.4f}\n")
+            f.write("\n")
+
+            f.write("5. WYNIKI MODELU Z ELIMINACJĄ OUTLIERÓW:\n")
+            f.write(f"   - MSE: {mse2:.6f}\n")
+            for key, value in metrics_corr2.items():
+                f.write(f"   - {key}: {value:.4f}\n")
+            f.write("\n")
+
+            f.write("6. PORÓWNANIE WYNIKÓW:\n")
+            improvement1 = ((metrics_orig['mae'] - metrics_corr1['mae']) / metrics_orig['mae'] * 100)
+            improvement2 = ((metrics_orig['mae'] - metrics_corr2['mae']) / metrics_orig['mae'] * 100)
+            f.write(f"   - Poprawa błędu (bez eliminacji outlierów): {improvement1:.2f}%\n")
+            f.write(f"   - Poprawa błędu (z eliminacją outlierów): {improvement2:.2f}%\n")
+            f.write(f"   - Różnica między modelami: {improvement2 - improvement1:.2f}%\n\n")
+
+            f.write("7. MECHANIZM ELIMINACJI OUTLIERÓW:\n")
+            f.write("   - Metoda: Kombinacja trzech algorytmów (Z-score, IQR, Mahalanobis)\n")
+            f.write("   - Próg outliera: >= 2 metody muszą wykryć punkt jako outlier\n")
+            f.write("   - Automatyczna eliminacja przed treningiem sieci\n\n")
+
+            f.write("8. PLIKI WYGENEROWANE:\n")
+            f.write("   - dystrybuanta_oryginalna.xlsx\n")
+            f.write("   - dystrybuanta_bez_outlierow.xlsx\n")
+            f.write("   - dystrybuanta_z_outlierami.xlsx\n")
+            f.write("   - model_bez_outlierow.pth\n")
+            f.write("   - model_z_outlierami.pth\n")
+            f.write("   - wyniki_szczegolowe.xlsx\n")
+            f.write("   - training_history.png (x2)\n")
+            f.write("   - error_analysis_*.png (x3)\n")
+
+        print("\n=== ZAKOŃCZONO POMYŚLNIE ===")
+        print(
+            f"Poprawa błędu (bez eliminacji outlierów): {((metrics_orig['mae'] - metrics_corr1['mae']) / metrics_orig['mae'] * 100):.2f}%")
+        print(
+            f"Poprawa błędu (z eliminacją outlierów): {((metrics_orig['mae'] - metrics_corr2['mae']) / metrics_orig['mae'] * 100):.2f}%")
+
+        print("\n=== PLIKI WYGENEROWANE ===")
+        print("📊 Dystrybuanty błędów:")
+        print("   - dystrybuanta_oryginalna.xlsx")
+        print("   - dystrybuanta_bez_outlierow.xlsx")
+        print("   - dystrybuanta_z_outlierami.xlsx")
+        print("🤖 Modele sieci neuronowych:")
+        print("   - model_bez_outlierow.pth")
+        print("   - model_z_outlierami.pth")
+        print("📈 Wykresy i analizy:")
+        print("   - training_history.png")
+        print("   - error_analysis_*.png")
+        print("📋 Raporty:")
+        print("   - wyniki_szczegolowe.xlsx")
+        print("   - raport_podsumowanie.txt")
+
+    except FileNotFoundError as e:
+        print(f"\n❌ BŁĄD: Nie znaleziono pliku: {str(e)}")
+        print("Sprawdź czy struktura katalogów jest poprawna:")
+        print("  - /dane/F8/*.xlsx")
+        print("  - /dane/F10/*.xlsx")
+
+    except ImportError as e:
+        print(f"\n❌ BŁĄD IMPORTU: {str(e)}")
+        print("Zainstaluj wymagane biblioteki:")
+        print("  pip install torch pandas numpy matplotlib scikit-learn scipy openpyxl")
 
     except Exception as e:
-        print(f"⚠️ Nie udało się załadować danych Excel: {e}")
-        print("Próba ładowania danych CSV...")
-
-        try:
-            # Fallback do danych CSV
-            training_data, testing_data = DataLoader.load_data_csv()
-            X_train, Y_train, X_test, Y_test = DataLoader.prepare_data_csv(training_data, testing_data)
-            data_source = "CSV"
-            features = ["input_X", "input_Y"]
-            print("✅ Dane CSV załadowane pomyślnie")
-        except Exception as csv_e:
-            print(f"❌ Błąd ładowania danych CSV: {csv_e}")
-            print("Używanie danych syntetycznych do demonstracji...")
-            X_train, Y_train, X_test, Y_test = generate_synthetic_data()
-            data_source = "Synthetic"
-            features = ["synthetic_X", "synthetic_Y"]
-
-    print(f"Źródło danych: {data_source}")
-    print(f"Dane treningowe: {X_train.shape}")
-    print(f"Dane testowe: {X_test.shape}")
-    print(f"Dostępne cechy: {len(features)}")
-
-    # ==============================================
-    # 2. KONFIGURACJA MODELI
-    # ==============================================
-    print("\n2. Konfiguracja modeli...")
-
-    # Model bez eliminacji outlierów (baseline)
-    model_baseline = EnhancedNeuralNetworkModel(
-        hidden_layers=[128, 64, 32],
-        activation_function='relu',
-        num_of_inputs_neurons=X_train.shape[1],
-        num_of_outputs_neurons=Y_train.shape[1],
-        epochs=200,
-        learning_rate=0.001,
-        optimizer='adam',
-        dropout_rate=0.2,
-        outlier_detection=False,  # WYŁĄCZONA detekcja outlierów
-        batch_size=32,
-        id=1
-    )
-
-    # Model z eliminacją outlierów (enhanced)
-    model_enhanced = EnhancedNeuralNetworkModel(
-        hidden_layers=[128, 64, 32],
-        activation_function='relu',
-        num_of_inputs_neurons=X_train.shape[1],
-        num_of_outputs_neurons=Y_train.shape[1],
-        epochs=200,
-        learning_rate=0.001,
-        optimizer='adam',
-        dropout_rate=0.2,
-        outlier_detection=True,  # WŁĄCZONA detekcja outlierów
-        outlier_method='combined',  # Kombinacja metod
-        outlier_threshold=3.0,
-        batch_size=32,
-        id=2
-    )
-
-    # Model z alternatywną architekturą
-    model_deep = EnhancedNeuralNetworkModel(
-        hidden_layers=[256, 128, 64, 32, 16],
-        activation_function='relu',
-        num_of_inputs_neurons=X_train.shape[1],
-        num_of_outputs_neurons=Y_train.shape[1],
-        epochs=250,
-        learning_rate=0.0005,
-        optimizer='adam',
-        dropout_rate=0.3,
-        outlier_detection=True,
-        outlier_method='combined',
-        outlier_threshold=2.5,
-        batch_size=64,
-        id=3
-    )
-
-    models = [model_baseline, model_enhanced, model_deep]
-    model_names = ['Baseline (bez outlier detection)',
-                   'Enhanced (z outlier detection)',
-                   'Deep Network (z outlier detection)']
-
-    # ==============================================
-    # 3. TRENOWANIE MODELI
-    # ==============================================
-    print("\n3. Trenowanie modeli...")
-    histories = []
-
-    for i, (model, name) in enumerate(zip(models, model_names)):
-        print(f"\n--- Trenowanie modelu: {name} ---")
-        history = model.train(X_train, Y_train)
-        histories.append(history)
-
-        # Zapisanie modelu
-        model_filename = f"model_{i + 1}_{name.replace(' ', '_').replace('(', '').replace(')', '')}.pth"
-        model.save_weights(model_filename)
-
-    # ==============================================
-    # 4. EWALUACJA MODELI
-    # ==============================================
-    print("\n4. Ewaluacja modeli...")
-
-    # Obliczenie metryk dla każdego modelu
-    results = []
-    predictions_list = []
-
-    for i, (model, name) in enumerate(zip(models, model_names)):
-        print(f"\n--- Ewaluacja modelu: {name} ---")
-
-        # Predykcje
-        predictions = model.predict(X_test)
-        predictions_list.append(predictions)
-
-        # Błędy przed i po korekcji
-        original_errors = Y_test
-        corrected_errors = Y_test - predictions
-
-        # Magnitudy błędów
-        original_magnitude = np.sqrt(original_errors[:, 0] ** 2 + original_errors[:, 1] ** 2)
-        corrected_magnitude = np.sqrt(corrected_errors[:, 0] ** 2 + corrected_errors[:, 1] ** 2)
-
-        # Metryki
-        metrics = {
-            'model_name': name,
-            'mse_original': np.mean(original_magnitude ** 2),
-            'mse_corrected': np.mean(corrected_magnitude ** 2),
-            'mae_original': np.mean(original_magnitude),
-            'mae_corrected': np.mean(corrected_magnitude),
-            'rmse_original': np.sqrt(np.mean(original_magnitude ** 2)),
-            'rmse_corrected': np.sqrt(np.mean(corrected_magnitude ** 2)),
-            'median_original': np.median(original_magnitude),
-            'median_corrected': np.median(corrected_magnitude),
-            'p90_original': np.percentile(original_magnitude, 90),
-            'p90_corrected': np.percentile(corrected_magnitude, 90),
-            'p95_original': np.percentile(original_magnitude, 95),
-            'p95_corrected': np.percentile(corrected_magnitude, 95)
-        }
-
-        # Poprawa w procentach
-        improvement = (metrics['mae_original'] - metrics['mae_corrected']) / metrics['mae_original'] * 100
-        metrics['improvement_percent'] = improvement
-
-        results.append(metrics)
-
-        # Wyświetlenie wyników
-        print(f"MAE oryginalne: {metrics['mae_original']:.4f} mm")
-        print(f"MAE po korekcji: {metrics['mae_corrected']:.4f} mm")
-        print(f"Poprawa: {improvement:.2f}%")
-        print(f"RMSE oryginalne: {metrics['rmse_original']:.4f} mm")
-        print(f"RMSE po korekcji: {metrics['rmse_corrected']:.4f} mm")
-
-    # ==============================================
-    # 5. ANALIZA SKUTECZNOŚCI ELIMINACJI OUTLIERÓW
-    # ==============================================
-    print("\n5. Analiza skuteczności eliminacji outlierów...")
-
-    # Porównanie modelu bez i z eliminacją outlierów
-    baseline_mae = results[0]['mae_corrected']
-    enhanced_mae = results[1]['mae_corrected']
-    outlier_improvement = (baseline_mae - enhanced_mae) / baseline_mae * 100
-
-    print(f"MAE baseline (bez outlier detection): {baseline_mae:.4f} mm")
-    print(f"MAE enhanced (z outlier detection): {enhanced_mae:.4f} mm")
-    print(f"Poprawa dzięki eliminacji outlierów: {outlier_improvement:.2f}%")
-
-    # Analiza outlierów w danych treningowych
-    outlier_detector = OutlierDetector(method='combined', threshold=3.0)
-    _, _, clean_indices = outlier_detector.filter_data(X_train, Y_train)
-    outlier_ratio = (1 - np.sum(clean_indices) / len(clean_indices)) * 100
-    print(f"Odsetek outlierów w danych treningowych: {outlier_ratio:.2f}%")
-
-    # ==============================================
-    # 6. WIZUALIZACJA WYNIKÓW
-    # ==============================================
-    print("\n6. Generowanie wizualizacji...")
-
-    # Historia trenowania
-    plot_training_history_custom(histories, model_names)
-
-    # Porównanie błędów
-    plot_error_comparison_custom(models, X_test, Y_test, model_names)
-
-    # Dystrybuanty błędów (CDF)
-    plot_error_cdf(models, X_test, Y_test, model_names)
-
-    # ==============================================
-    # 7. EKSPORT WYNIKÓW
-    # ==============================================
-    print("\n7. Eksport wyników...")
-
-    # Tabela z metrykami
-    results_df = pd.DataFrame(results)
-    results_df.to_csv('model_comparison_results.csv', index=False)
-    print("✅ Metryki zapisane do: model_comparison_results.csv")
-
-    # Eksport dystrybuanty najlepszego modelu (zgodnie z wymaganiami)
-    best_model_idx = np.argmin([r['mae_corrected'] for r in results])
-    best_model = models[best_model_idx]
-    best_predictions = best_model.predict(X_test)
-    best_corrected_errors = Y_test - best_predictions
-    best_corrected_magnitude = np.sqrt(best_corrected_errors[:, 0] ** 2 + best_corrected_errors[:, 1] ** 2)
-
-    # Obliczenie CDF
-    sorted_errors = np.sort(best_corrected_magnitude)
-    cdf_values = np.arange(1, len(sorted_errors) + 1) / len(sorted_errors)
-
-    # Eksport do Excel (wymaganie zadania)
-    cdf_df = pd.DataFrame({'dystrybuanta_bledu': cdf_values})
-    cdf_df.to_excel('dystrybuanta_bledu_najlepszy_model.xlsx', index=False)
-    print("✅ Dystrybuanta najlepszego modelu zapisana do: dystrybuanta_bledu_najlepszy_model.xlsx")
-
-    # Eksport szczegółowych wyników
-    detailed_results = {
-        'architecture_info': {
-            'baseline': {
-                'layers': model_baseline.hidden_layers,
-                'activation': model_baseline.activation_function,
-                'outlier_detection': False
-            },
-            'enhanced': {
-                'layers': model_enhanced.hidden_layers,
-                'activation': model_enhanced.activation_function,
-                'outlier_detection': True,
-                'outlier_method': 'combined'
-            },
-            'deep': {
-                'layers': model_deep.hidden_layers,
-                'activation': model_deep.activation_function,
-                'outlier_detection': True,
-                'outlier_method': 'combined'
-            }
-        },
-        'training_info': {
-            'data_source': data_source,
-            'training_samples': X_train.shape[0],
-            'testing_samples': X_test.shape[0],
-            'input_features': X_train.shape[1],
-            'output_features': Y_train.shape[1],
-            'outlier_ratio': f"{outlier_ratio:.2f}%"
-        },
-        'performance_comparison': results
-    }
-
-    # Zapis do JSON dla szczegółowej analizy
-    import json
-    with open('detailed_results.json', 'w', encoding='utf-8') as f:
-        json.dump(detailed_results, f, indent=2, ensure_ascii=False, default=str)
-    print("✅ Szczegółowe wyniki zapisane do: detailed_results.json")
-
-    # ==============================================
-    # 8. PODSUMOWANIE
-    # ==============================================
-    print("\n" + "=" * 80)
-    print("PODSUMOWANIE EKSPERYMENTU")
-    print("=" * 80)
-
-    print(f"\n📊 DANE:")
-    print(f"  • Źródło: {data_source}")
-    print(f"  • Próbki treningowe: {X_train.shape[0]}")
-    print(f"  • Próbki testowe: {X_test.shape[0]}")
-    print(f"  • Cechy wejściowe: {X_train.shape[1]}")
-    print(f"  • Wykryte outliery: {outlier_ratio:.2f}%")
-
-    print(f"\n🏆 NAJLEPSZY MODEL:")
-    best_result = results[best_model_idx]
-    print(f"  • Nazwa: {best_result['model_name']}")
-    print(f"  • MAE przed korekcją: {best_result['mae_original']:.4f} mm")
-    print(f"  • MAE po korekcji: {best_result['mae_corrected']:.4f} mm")
-    print(f"  • Poprawa: {best_result['improvement_percent']:.2f}%")
-
-    print(f"\n✨ SKUTECZNOŚĆ ELIMINACJI OUTLIERÓW:")
-    print(f"  • Poprawa względem baseline: {outlier_improvement:.2f}%")
-
-    print(f"\n📁 WYGENEROWANE PLIKI:")
-    print(f"  • model_comparison_results.csv - porównanie metryk")
-    print(f"  • dystrybuanta_bledu_najlepszy_model.xlsx - dystrybuanta (wymaganie)")
-    print(f"  • detailed_results.json - szczegółowe wyniki")
-    print(f"  • model_*.pth - zapisane modele")
-
-    print("\n✅ Eksperyment zakończony pomyślnie!")
-
-    return models, results, histories
-
-
-def generate_synthetic_data():
-    """Generowanie danych syntetycznych do demonstracji"""
-    print("Generowanie danych syntetycznych...")
-
-    np.random.seed(42)
-    n_train, n_test = 5000, 1000
-
-    # Symulacja błędów systemu pomiarowego
-    X_train = np.random.randn(n_train, 2) * 10
-    noise_train = np.random.randn(n_train, 2) * 0.5
-    Y_train = 0.1 * X_train + noise_train
-
-    X_test = np.random.randn(n_test, 2) * 10
-    noise_test = np.random.randn(n_test, 2) * 0.5
-    Y_test = 0.1 * X_test + noise_test
-
-    # Dodanie kilku outlierów
-    outlier_indices = np.random.choice(n_train, size=int(0.05 * n_train), replace=False)
-    Y_train[outlier_indices] += np.random.randn(len(outlier_indices), 2) * 3
-
-    return X_train, Y_train, X_test, Y_test
-
-
-def plot_training_history_custom(histories, model_names):
-    """Wykres historii trenowania"""
-    plt.figure(figsize=(15, 5))
-
-    # Loss
-    plt.subplot(1, 3, 1)
-    for i, history in enumerate(histories):
-        if hasattr(history, 'history'):
-            hist_dict = history.history
-        else:
-            hist_dict = history
-
-        if 'loss' in hist_dict:
-            plt.plot(hist_dict['loss'], label=f'{model_names[i]} - trening')
-        if 'val_loss' in hist_dict:
-            plt.plot(hist_dict['val_loss'], label=f'{model_names[i]} - walidacja', linestyle='--')
-
-    plt.xlabel('Epoka')
-    plt.ylabel('Loss (MSE)')
-    plt.title('Historia trenowania - Loss')
-    plt.legend()
-    plt.yscale('log')
-    plt.grid(True)
-
-    # MAE
-    plt.subplot(1, 3, 2)
-    for i, history in enumerate(histories):
-        if hasattr(history, 'history'):
-            hist_dict = history.history
-        else:
-            hist_dict = history
-
-        if 'mae' in hist_dict:
-            plt.plot(hist_dict['mae'], label=f'{model_names[i]} - trening')
-        if 'val_mae' in hist_dict:
-            plt.plot(hist_dict['val_mae'], label=f'{model_names[i]} - walidacja', linestyle='--')
-
-    plt.xlabel('Epoka')
-    plt.ylabel('MAE')
-    plt.title('Historia trenowania - MAE')
-    plt.legend()
-    plt.yscale('log')
-    plt.grid(True)
-
-    # Learning Rate
-    plt.subplot(1, 3, 3)
-    for i, history in enumerate(histories):
-        if hasattr(history, 'history'):
-            hist_dict = history.history
-        else:
-            hist_dict = history
-
-        if 'lr' in hist_dict:
-            plt.plot(hist_dict['lr'], label=f'{model_names[i]}')
-
-    plt.xlabel('Epoka')
-    plt.ylabel('Learning Rate')
-    plt.title('Zmiana Learning Rate')
-    plt.legend()
-    plt.yscale('log')
-    plt.grid(True)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_error_comparison_custom(models, X_test, Y_test, model_names):
-    """Porównanie błędów dla różnych modeli"""
-    plt.figure(figsize=(15, 10))
-
-    original_errors = np.sqrt(Y_test[:, 0] ** 2 + Y_test[:, 1] ** 2)
-
-    # Box plot
-    plt.subplot(2, 2, 1)
-    error_data = [original_errors]
-    labels = ['Oryginalne']
-
-    for i, model in enumerate(models):
-        predictions = model.predict(X_test)
-        corrected_errors = Y_test - predictions
-        corrected_magnitude = np.sqrt(corrected_errors[:, 0] ** 2 + corrected_errors[:, 1] ** 2)
-        error_data.append(corrected_magnitude)
-        labels.append(model_names[i])
-
-    plt.boxplot(error_data, labels=labels)
-    plt.ylabel('Błąd [mm]')
-    plt.title('Porównanie rozkładów błędów')
-    plt.xticks(rotation=45)
-    plt.grid(True)
-
-    # Histogram
-    plt.subplot(2, 2, 2)
-    plt.hist(original_errors, bins=50, alpha=0.5, label='Oryginalne', density=True, color='red')
-
-    for i, model in enumerate(models):
-        predictions = model.predict(X_test)
-        corrected_errors = Y_test - predictions
-        corrected_magnitude = np.sqrt(corrected_errors[:, 0] ** 2 + corrected_errors[:, 1] ** 2)
-        plt.hist(corrected_magnitude, bins=50, alpha=0.6, label=f'{model_names[i]}', density=True)
-
-    plt.xlabel('Błąd [mm]')
-    plt.ylabel('Gęstość')
-    plt.title('Rozkład błędów')
-    plt.legend()
-    plt.grid(True)
-
-    # Metryki porównawcze
-    plt.subplot(2, 2, 3)
-    mae_original = []
-    mae_corrected = []
-
-    for model in models:
-        predictions = model.predict(X_test)
-        corrected_errors = Y_test - predictions
-        corrected_magnitude = np.sqrt(corrected_errors[:, 0] ** 2 + corrected_errors[:, 1] ** 2)
-
-        mae_original.append(np.mean(original_errors))
-        mae_corrected.append(np.mean(corrected_magnitude))
-
-    x = np.arange(len(model_names))
-    width = 0.35
-
-    plt.bar(x - width / 2, mae_original, width, label='MAE Original', alpha=0.7)
-    plt.bar(x + width / 2, mae_corrected, width, label='MAE Corrected', alpha=0.7)
-
-    plt.xlabel('Model')
-    plt.ylabel('MAE [mm]')
-    plt.title('Porównanie MAE')
-    plt.xticks(x, model_names, rotation=45)
-    plt.legend()
-    plt.grid(True)
-
-    # Poprawa w procentach
-    plt.subplot(2, 2, 4)
-    improvements = [(mae_original[i] - mae_corrected[i]) / mae_original[i] * 100
-                    for i in range(len(models))]
-
-    plt.bar(model_names, improvements, alpha=0.7, color='green')
-    plt.ylabel('Poprawa [%]')
-    plt.title('Poprawa dokładności')
-    plt.xticks(rotation=45)
-    plt.grid(True)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_error_cdf(models, X_test, Y_test, model_names):
-    """Wykres dystrybuanty błędów (CDF) - kluczowy dla zadania"""
-    plt.figure(figsize=(12, 8))
-
-    original_errors = np.sqrt(Y_test[:, 0] ** 2 + Y_test[:, 1] ** 2)
-
-    # CDF błędów oryginalnych
-    sorted_original = np.sort(original_errors)
-    cdf_original = np.arange(1, len(sorted_original) + 1) / len(sorted_original)
-    plt.plot(sorted_original, cdf_original, label='Błędy oryginalne',
-             linewidth=3, color='red', alpha=0.8)
-
-    # CDF dla każdego modelu
-    colors = ['blue', 'green', 'orange', 'purple', 'brown']
-
-    for i, model in enumerate(models):
-        predictions = model.predict(X_test)
-        corrected_errors = Y_test - predictions
-        corrected_magnitude = np.sqrt(corrected_errors[:, 0] ** 2 + corrected_errors[:, 1] ** 2)
-
-        sorted_corrected = np.sort(corrected_magnitude)
-        cdf_corrected = np.arange(1, len(sorted_corrected) + 1) / len(sorted_corrected)
-
-        plt.plot(sorted_corrected, cdf_corrected,
-                 label=f'{model_names[i]}',
-                 linewidth=2, color=colors[i % len(colors)], alpha=0.8)
-
-    plt.xlabel('Błąd [mm]')
-    plt.ylabel('Prawdopodobieństwo kumulatywne')
-    plt.title('Dystrybuanta błędów pomiaru (CDF)\n' +
-              'Im linia jest bardziej przesunięta w lewo, tym lepszy model')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.xlim(0, np.percentile(original_errors, 99))  # Ograniczenie do 99 percentyla
-
-    # Dodanie linii percentyli
-    percentiles = [50, 90, 95]
-    for p in percentiles:
-        p_value = np.percentile(original_errors, p)
-        plt.axvline(p_value, color='gray', linestyle='--', alpha=0.5)
-        plt.text(p_value, 0.1, f'P{p}', rotation=90, alpha=0.7)
-
-    plt.tight_layout()
-    plt.show()
+        print(f"\n❌ NIEOCZEKIWANY BŁĄD: {str(e)}")
+        import traceback
+        print("\nPełny stack trace:")
+        traceback.print_exc()
+
+        print("\n🔧 MOŻLIWE ROZWIĄZANIA:")
+        print("1. Sprawdź czy wszystkie pliki .xlsx znajdują się w odpowiednich katalogach")
+        print("2. Upewnij się, że pliki nie są uszkodzone")
+        print("3. Sprawdź czy masz wystarczającą ilość RAM (zalecane >4GB)")
+        print("4. Sprawdź czy Python ma uprawnienia do zapisu w bieżącym katalogu")
 
 
 if __name__ == "__main__":
-    # Ustawienie stylu wykresów
-    plt.style.use('default')
-    plt.rcParams['figure.dpi'] = 100
-    plt.rcParams['savefig.dpi'] = 300
-
-    # Uruchomienie głównej funkcji
-    models, results, histories = main()
+    main()

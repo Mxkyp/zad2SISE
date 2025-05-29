@@ -153,9 +153,9 @@ class EnhancedNeuralNetworkModel:
         else:
             raise ValueError('Optimizer must be either "adam" or "sgd"')
 
-        # Scheduler
+        # Scheduler - usunięto parametr 'verbose' który nie jest obsługiwany w nowszych wersjach PyTorch
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.5, patience=10, min_lr=1e-7, verbose=True
+            optimizer, mode='min', factor=0.5, patience=10, min_lr=1e-7
         )
 
         # Funkcja straty
@@ -293,5 +293,3 @@ class EnhancedNeuralNetworkModel:
         weights_df = pd.DataFrame({'weights': all_weights})
         weights_df.to_csv(filename, index=False)
         print(f"Wagi zapisane do {filename}")
-
-
