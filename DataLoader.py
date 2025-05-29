@@ -1,201 +1,63 @@
 import glob as glob
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import matplotlib.pyplot as plt
+
+BOTH = 0
+STATIC = 1
+DYNAMIC = 2
 
 
-def load_all_data():
+def load_all_data(flag):
     f8_path = "./pomiary/F8/"
     f10_path = "./pomiary/F10/"
 
-    # === Static Data ===
-    static_files = glob.glob(f"{f8_path}*stat*.xlsx") + glob.glob(
-        f"{f10_path}*stat*.xlsx"
-    )
-    print(f"Znaleziono {len(static_files)} plików statycznych")
-    static_data = []
-    for file_path in static_files:
-        try:
-            df = pd.read_excel(file_path, sheet_name="Sheet1")
-            static_data.append(df)
-        except Exception as e:
-            print(f"Błąd ładowania {file_path}: {e}")
-    static_combined = pd.concat(static_data, ignore_index=True) if static_data else None
-    if static_combined is not None:
-        print(f"Łączenie próbek statycznych: {len(static_combined)}")
-    else:
-        print("Nie znaleziono danych statycznych.")
-
-    # === Dynamic Data ===
-    dynamic_files = [
-        f
-        for f in glob.glob(f"{f8_path}*.xlsx") + glob.glob(f"{f10_path}*.xlsx")
-        if "stat" not in f.lower() and "random" not in f.lower()
-    ]
-    print(f"Znaleziono {len(dynamic_files)} plików dynamicznych")
-    dynamic_data = []
-    for file_path in dynamic_files:
-        try:
-            df = pd.read_excel(file_path, sheet_name="Sheet1")
-            dynamic_data.append(df)
-        except Exception as e:
-            print(f"Błąd ładowania {file_path}: {e}")
-    dynamic_combined = (
-        pd.concat(dynamic_data, ignore_index=True) if dynamic_data else None
-    )
-    if dynamic_combined is not None:
-        print(f"Łączenie próbek dynamicznych: {len(dynamic_combined)}")
-    else:
-        print("Nie znaleziono danych dynamicznych.")
-
-    return static_combined, dynamic_combined
-
-
-# --- Load and clean data ---
-df_training, df_testing = load_all_data()
-
-df_training = df_training.dropna(
-    subset=[
-        "data__coordinates__x",
-        "reference__x",
-        "data__coordinates__y",
-        "reference__y",
-    ]
-)
-df_testing = df_testing.dropna(
-    subset=[
-        "data__coordinates__x",
-        "reference__x",
-        "data__coordinates__y",
-        "reference__y",
-    ]
-)
-
-# --- Prepare training data ---
-inputs_train = torch.tensor(
-    df_training[["data__coordinates__x", "data__coordinates__y"]].values,
-    dtype=torch.float32,
-)
-targets_train = torch.tensor(
-    df_training[["reference__x", "reference__y"]].values,
-    dtype=torch.float32,
-)
-
-# --- Prepare test data ---
-inputs_test = torch.tensor(
-    df_testing[["data__coordinates__x", "data__coordinates__y"]].values,
-    dtype=torch.float32,
-)
-targets_test = torch.tensor(
-    df_testing[["reference__x", "reference__y"]].values,
-    dtype=torch.float32,
-)
-
-
-# --- Define model ---
-class CorrectionNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(2, 64),
-            nn.ReLU(),
-            nn.Linear(64, 64),
-            nn.ReLU(),
-            nn.Linear(64, 2),
+    if flag == BOTH or flag == STATIC:
+        # === Static Data ===
+        static_files = glob.glob(f"{f8_path}*stat*.xlsx") + glob.glob(
+            f"{f10_path}*stat*.xlsx"
         )
+        print(f"Znaleziono {len(static_files)} plików statycznych")
+        static_data = []
+        for file_path in static_files:
+            try:
+                df = pd.read_excel(file_path, sheet_name="Sheet1")
+                static_data.append(df)
+            except Exception as e:
+                print(f"Błąd ładowania {file_path}: {e}")
+        static_combined = (
+            pd.concat(static_data, ignore_index=True) if static_data else None
+        )
+        if static_combined is not None:
+            print(f"Łączenie próbek statycznych: {len(static_combined)}")
+        else:
+            print("Nie znaleziono danych statycznych.")
 
-    def forward(self, xy):
-        return self.net(xy)
+    if flag == BOTH or flag == DYNAMIC:
+        # === Dynamic Data ===
+        dynamic_files = [
+            f
+            for f in glob.glob(f"{f8_path}*.xlsx") + glob.glob(f"{f10_path}*.xlsx")
+            if "stat" not in f.lower() and "random" not in f.lower()
+        ]
+        print(f"Znaleziono {len(dynamic_files)} plików dynamicznych")
+        dynamic_data = []
+        for file_path in dynamic_files:
+            try:
+                df = pd.read_excel(file_path, sheet_name="Sheet1")
+                dynamic_data.append(df)
+            except Exception as e:
+                print(f"Błąd ładowania {file_path}: {e}")
+        dynamic_combined = (
+            pd.concat(dynamic_data, ignore_index=True) if dynamic_data else None
+        )
+        if dynamic_combined is not None:
+            print(f"Łączenie próbek dynamicznych: {len(dynamic_combined)}")
+        else:
+            print("Nie znaleziono danych dynamicznych.")
 
-
-model = CorrectionNet()
-
-# --- Loss and optimizer ---
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# --- Training loop ---
-n_epochs = 1000
-for epoch in range(n_epochs):
-    model.train()
-    optimizer.zero_grad()
-
-    output = model(inputs_train)
-    loss = criterion(output, targets_train)
-    loss.backward()
-    optimizer.step()
-
-    if epoch % 100 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.item():.4f}")
-
-# --- Evaluate on test set ---
-model.eval()
-with torch.no_grad():
-    corrected_test = model(inputs_test)
-
-# --- Plot results: x and y scatter plots ---
-fig, axs = plt.subplots(1, 2, figsize=(14, 6))
-
-axs[0].scatter(
-    range(len(targets_test)),
-    targets_test[:, 0].numpy(),
-    label="Reference X",
-    color="green",
-    s=10,
-)
-axs[0].scatter(
-    range(len(inputs_test)),
-    inputs_test[:, 0].numpy(),
-    label="Measured X",
-    color="red",
-    alpha=0.5,
-    s=10,
-)
-axs[0].scatter(
-    range(len(corrected_test)),
-    corrected_test[:, 0].numpy(),
-    label="Corrected X",
-    color="blue",
-    s=10,
-)
-axs[0].set_title("X Axis Correction")
-axs[0].set_xlabel("Sample Index")
-axs[0].set_ylabel("X Value")
-axs[0].grid(True)
-axs[0].legend()
-
-axs[1].scatter(
-    range(len(targets_test)),
-    targets_test[:, 1].numpy(),
-    label="Reference Y",
-    color="green",
-    s=10,
-)
-axs[1].scatter(
-    range(len(inputs_test)),
-    inputs_test[:, 1].numpy(),
-    label="Measured Y",
-    color="red",
-    alpha=0.5,
-    s=10,
-)
-axs[1].scatter(
-    range(len(corrected_test)),
-    corrected_test[:, 1].numpy(),
-    label="Corrected Y",
-    color="blue",
-    s=10,
-)
-axs[1].set_title("Y Axis Correction")
-axs[1].set_xlabel("Sample Index")
-axs[1].set_ylabel("Y Value")
-axs[1].grid(True)
-axs[1].legend()
-
-plt.suptitle("Neural Network Correction: 2D Coordinates")
-plt.tight_layout()
-plt.show()
+    if flag == STATIC:
+        return static_combined
+    if flag == DYNAMIC:
+        return dynamic_combined
+    if flag == BOTH:
+        return static_combined, dynamic_combined
