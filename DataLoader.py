@@ -26,7 +26,7 @@ class DataLoader:
             dynamic_folder_path = dynamic_folders_paths[i]
 
             if os.path.exists(static_folder_path):
-                static_files = sorted(file for file in os.listdir(static_folder_path) if file.endwith(".csv"))
+                static_files = sorted(file for file in os.listdir(static_folder_path) if file.endswith(".csv"))
                 for file in static_files:
                     file_path = os.path.join(static_folder_path, file)
                     temp_data_frame = pd.read_csv(file_path, names=columns)

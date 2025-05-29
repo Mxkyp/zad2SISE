@@ -77,7 +77,7 @@ class EnhancedNeuralNetworkModel:
 
         # Inicjalizacja detektora outlierów
         if self.outlier_detection:
-            self.outlier_detector = OutlierDetector(method=outlier_method, threshold=outlier_threshold)
+            self.outlier_detector = OutlierDetector.OutlierDetector(method=outlier_method, threshold=outlier_threshold)
 
         self.model = self.create_model()
         self.scaler_X = StandardScaler()
@@ -110,7 +110,7 @@ class EnhancedNeuralNetworkModel:
             print(f"Dane po filtracji: {X_clean.shape[0]} próbek")
             return X_clean, Y_clean, clean_indices
         else:
-            return X, Y, np.ones(len(X), dtypr=bool)
+            return X, Y, np.ones(len(X), dtype=bool)
 
     def train(self, X_train, Y_train, X_val = None, Y_val = None, validation_split=0.2):
         """ Trenowanie sieci neuronowej """
@@ -238,5 +238,60 @@ class EnhancedNeuralNetworkModel:
 
         return HistoryWrapper(self.history)
 
+    def predict(self, X):
+        """ Predykcja korekcji błędów """
+        X_scaled = self.scaler_X.transform(X)
+        X_tensor = torch.FloatTensor(X_scaled).to(self.device)
+
+        self.model.eval()
+        with torch.no_grad():
+            predictions_scaled = self.model(X_tensor).cpu().numpy()
+
+        predictions = self.scaler_Y.inverse_transform(predictions_scaled)
+        return predictions
+
+    def test(self, X_test, Y_test):
+        """ Testowanie modelu """
+        predictions = self.predict(X_test)
+        mse = mean_squared_error(Y_test, predictions)
+        return mse, predictions
+
+    def save_weights(self, filename):
+        """ Zapisywanie wag modelu """
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'scaler_X': self.scaler_X,
+            'scaler_Y': self.scaler_Y,
+            'model_config': {
+                'hidden_layers': self.hidden_layers,
+                'activation_function': self.activation_function,
+                'num_of_inputs_neurons': self.num_of_inputs_neurons,
+                'num_of_outputs_neurons': self.num_of_outputs_neurons,
+                'dropout_rate': self.dropout_rate,
+            }
+        }, filename)
+        print(f"Model zapisany do {filename}")
+
+    def load_weights(self, filename):
+        """ Ładowanie wag modelu """
+        checkpoint = torch.load(filename, map_location=self.device)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.scaler_X = checkpoint['scaler_X']
+        self.scaler_Y = checkpoint['scaler_Y']
+        print(f"Model załadowany z {filename}")
+
+    def save_weights_csv(self, filename):
+        """ Zapisywanie wag modelu do pliku CSV """
+        weights_data = []
+        layer_info = []
+
+        for name, param in self.model.named_parameters():
+            weights_data.append(param.detach().cpu().numpy().flatten())
+            layer_info.append(name)
+
+        all_weights = np.concatenate(weights_data)
+        weights_df = pd.DataFrame({'weights': all_weights})
+        weights_df.to_csv(filename, index=False)
+        print(f"Wagi zapisane do {filename}")
 
 
