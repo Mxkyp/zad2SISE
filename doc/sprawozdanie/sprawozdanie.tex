@@ -1,11 +1,13 @@
 \documentclass{classrep}
 \usepackage[utf8]{inputenc}
+\usepackage{graphicx}
 \usepackage{color}
+\usepackage{caption} % opcjonalnie, dla lepszego formatowania
 
 \DeclareUnicodeCharacter{00A0}{~}
 
 \studycycle{Informatyka, studia dzienne, inż I st.}
-\coursesemester{VI}
+\coursesemester{IV}
 
 \coursename{Sztuczna inteligencja i systemy ekspertowe}
 \courseyear{2024/2025}
@@ -29,15 +31,32 @@
 
 
 \section{Wprowadzenie}
- {\color{blue}
-  We wprowadzeniu należy zaprezentować niezbędną teorię potrzebną do realizacji
-  zadania (przy czym należy tu ograniczyć się wyłącznie do tego, co było
-  wykorzystane), tak aby inny student, który nigdy wcześniej nie zetknął się z tą
-  tematyką, potrafił zrozumieć dalszy opis. Część ta powinna wprowadzać wszystkie
-  wykorzystywane wzory, oznaczenia itp., do których należy się odwoływać w
-  dalszej części niniejszego sprawozdania. Zamieszczony tu własny opis teorii (a
-  nie skopiowany!) należy poprzeć odwołaniami bibliograficznymi do literatury
-  zamieszczonej na końcu.}
+\paragraph{}
+\textbf{Sieć neuronowa} (znana również jako \textit{sztuczna sieć neuronowa},
+w skrócie \textbf{NN} lub \textbf{ANN})
+to model obliczeniowy inspirowany strukturą i funkcjami biologicznych sieci neuronowych.
+Sieć neuronowa składa się z połączonych jednostek lub węzłów, zwanych \textbf{sztucznymi neuronami}, które luźno odwzorowują neurony w mózgu.
+\paragraph{}
+\textbf{Neurony} są połączone \textbf{krawędziami}, które odwzorowują synapsy w mózgu. Każdy sztuczny neuron odbiera sygnały od połączonych z nim neuronów, przetwarza je, a następnie wysyła sygnał do kolejnych połączonych neuronów.
+\paragraph{}
+„\textbf{Sygnał}” ma postać liczby rzeczywistej, a wyjście neuronu obliczane jest
+za pomocą pewnej nieliniowej funkcji sumy jego wejść, zwanej \textbf{funkcją aktywacji}.
+\paragraph{}
+Siła sygnału w każdym połączeniu jest określana przez \textbf{wagę}, która jest dostosowywana podczas procesu uczenia.
+
+Zazwyczaj neurony grupowane są w \textbf{warstwy}. Różne warstwy mogą wykonywać różne transformacje danych wejściowych.
+Sygnały przepływają od pierwszej warstwy (\textit{warstwa wejściowa}) do ostatniej (\textit{warstwa wyjściowa}),
+przechodząc być może przez kilka warstw pośrednich (\textit{warstw ukrytych}).
+Sieć nazywa się \textbf{głęboką siecią neuronową}, jeśli zawiera co najmniej dwie warstwy ukryte.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.2]{nn.png}
+	\caption{Schemat przykładowej sieci neuronowej}
+	\label{fig:nn}
+\end{figure}
+
+Sztuczne sieci neuronowe są wykorzystywane w różnych zadaniach, takich jak \textit{modelowanie predykcyjne}, \textit{sterowanie adaptacyjne} czy \textit{rozwiązywanie problemów z zakresu sztucznej inteligencji}. Potrafią uczyć się na podstawie doświadczenia i wyciągać wnioski z złożonych i pozornie niepowiązanych danych.
 
 \section{Opis implementacji}
  {\color{blue}
@@ -86,10 +105,9 @@
   tak jak poprzednio, najistotniejsze są wnioski o charakterze uniwersalnym.}
 
 \begin{thebibliography}{0}
-	\bibitem{l2short} T. Oetiker, H. Partl, I. Hyna, E. Schlegl.
-	\textsl{Nie za krótkie wprowadzenie do systemu \LaTeX2e}, 2007, dostępny
-	online.
-\end{thebibliography}
+	\bibitem{l2short} Wikipedia contributors. "Neural network (machine learning)."
+	Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia,
+	29 May. 2025. Web. 29 May. 2025. \end{thebibliography}
 
 {\color{blue}
 Na końcu należy obowiązkowo podać cytowaną w sprawozdaniu literaturę, z której
