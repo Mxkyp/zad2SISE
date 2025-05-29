@@ -1,23 +1,9 @@
-import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from networkx.algorithms.shortest_paths.weighted import all_pairs_dijkstra_path_length
-from torch.utils import data as data_utils
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-import numpy as np
-import matplotlib.pyplot as plt
-from pathlib import Path
-import glob
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
 
-"""
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import datasets
-from torchvision.transforms import ToTensor
-"""
 
 # ============= NEURAL NETWORK MODEL =============
 class UWBCorrectionNet(nn.Module):
@@ -114,17 +100,3 @@ def train_model(model, train_loader, vel_loader, epochs=200, lr=0.001):
     model.load_state_dict(torch.load('best_uwb_model.pth'))
 
     return train_losses, val_losses
-
-# ============= EVALUATION FUNCTIONS =============
-def evaluate_model(model, X_test, Y_test, scaler_X):
-    """Evaluate model performance"""
-
-    # Normalize test data
-    X_test_norm = scaler_X.transform(X_test)
-    X_test_tensor = torch.tensor(X_test_norm, dtype=torch.float32).to(device)
-
-    model.eval()
-    with torch.no_grad():
-        predictions = model(X_test_tensor).cpu().numpy()
-
-    # Calculate errors before and after correction

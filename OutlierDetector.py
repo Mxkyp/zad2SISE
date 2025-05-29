@@ -1,7 +1,6 @@
-from scipy.spatial.distance import mahalanobis
-from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy import stats
+from sklearn.preprocessing import StandardScaler
 
 
 class OutlierDetector:
@@ -76,7 +75,7 @@ class OutlierDetector:
 
         return outliers
 
-    def filte_data(self, X, Y):
+    def filter_data(self, X, Y):
         """ Filtruje dane usuwając outliery """
         outliers = self.detect_outliers(X, Y)
         clean_indices = ~outliers
