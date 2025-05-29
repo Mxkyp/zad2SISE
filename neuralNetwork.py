@@ -1,62 +1,12 @@
-import glob as glob
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
+import DataLoader as dl
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 
-
-def load_all_data():
-    f8_path = "./pomiary/F8/"
-    f10_path = "./pomiary/F10/"
-
-    # === Static Data ===
-    static_files = glob.glob(f"{f8_path}*stat*.xlsx") + glob.glob(
-        f"{f10_path}*stat*.xlsx"
-    )
-    print(f"Znaleziono {len(static_files)} plików statycznych")
-    static_data = []
-    for file_path in static_files:
-        try:
-            df = pd.read_excel(file_path, sheet_name="Sheet1")
-            static_data.append(df)
-        except Exception as e:
-            print(f"Błąd ładowania {file_path}: {e}")
-    static_combined = pd.concat(static_data, ignore_index=True) if static_data else None
-    if static_combined is not None:
-        print(f"Łączenie próbek statycznych: {len(static_combined)}")
-    else:
-        print("Nie znaleziono danych statycznych.")
-
-    # === Dynamic Data ===
-    dynamic_files = [
-        f
-        for f in glob.glob(f"{f8_path}*.xlsx") + glob.glob(f"{f10_path}*.xlsx")
-        if "stat" not in f.lower() and "random" not in f.lower()
-    ]
-    print(f"Znaleziono {len(dynamic_files)} plików dynamicznych")
-    dynamic_data = []
-    for file_path in dynamic_files:
-        try:
-            df = pd.read_excel(file_path, sheet_name="Sheet1")
-            dynamic_data.append(df)
-        except Exception as e:
-            print(f"Błąd ładowania {file_path}: {e}")
-    dynamic_combined = (
-        pd.concat(dynamic_data, ignore_index=True) if dynamic_data else None
-    )
-    if dynamic_combined is not None:
-        print(f"Łączenie próbek dynamicznych: {len(dynamic_combined)}")
-    else:
-        print("Nie znaleziono danych dynamicznych.")
-
-    return static_combined, dynamic_combined
-
-
 # --- Load and clean data ---
-df_training, df_testing = load_all_data()
+df_training, df_testing = dl.load_all_data()
 
 df_training = df_training.dropna(
     subset=[
