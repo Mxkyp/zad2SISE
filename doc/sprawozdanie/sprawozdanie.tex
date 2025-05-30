@@ -58,30 +58,47 @@ Sieć nazywa się \textbf{głęboką siecią neuronową}, jeśli zawiera co najm
 
 Sztuczne sieci neuronowe są wykorzystywane w różnych zadaniach, takich jak \textit{modelowanie predykcyjne}, \textit{sterowanie adaptacyjne} czy \textit{rozwiązywanie problemów z zakresu sztucznej inteligencji}. Potrafią uczyć się na podstawie doświadczenia i wyciągać wnioski z złożonych i pozornie niepowiązanych danych.
 
+\clearpage{}
 \section{Opis implementacji}
-Zadanie zostało wykonane przy użyciu języka \textbf{Python3}, przy użyciu następujących bibliotek:
+
+Zadanie zostało wykonane przy użyciu języka \textbf{Python3}, z wykorzystaniem następujących bibliotek:
+
 \begin{itemize}
-	\item{\texttt{Matplotlib}}
-	\item{\texttt{Numpy}}
-	\item{\texttt{PyTorch}}
+	\item \texttt{Matplotlib}
+	\item \texttt{Numpy}
+	\item \texttt{PyTorch}
+	\item \texttt{scikit-learn}
 \end{itemize}
 
-\pagebreak
-Projekt został podzielony na następujące pliki.
+Projekt został podzielony na następujące pliki:
 
 \begin{enumerate}
-	\item \texttt{NeuralNetworkModel.py} – główny moduł modelu uczenia maszynowego oparty na sieci neuronowej. Odpowiada za tworzenie, trenowanie, testowanie i zapisywanie modelu, z uwzględnieniem mechanizmów detekcji outlierów i normalizacji danych.
+	\item \texttt{DataLoader.py} – moduł odpowiedzialny za wczytywanie, filtrowanie i wstępne przetwarzanie danych pomiarowych z plików Excel.
+
+	\item \texttt{NeuralNetworkModel.py} – główny moduł modelu uczenia maszynowego opartego na sieci neuronowej. Odpowiada za tworzenie, trenowanie, testowanie i zapisywanie modelu, z uwzględnieniem mechanizmów detekcji outlierów i normalizacji danych.
 
 	\item \texttt{OutlierDetector.py} – moduł odpowiedzialny za identyfikację obserwacji odstających w danych wejściowych. Wspiera różne metody detekcji, m.in. oparte na odległości Mahalanobisa czy odchyleniu standardowym.
 
 	\item \texttt{main.py} – plik uruchomieniowy, zawierający konfigurację eksperymentów, wczytywanie danych, inicjalizację modelu oraz zapisywanie wyników i metryk. Stanowi punkt wejścia do całego systemu.
 
-	\item \texttt{utils.py} – zbiór funkcji pomocniczych, takich jak wczytywanie danych, wizualizacja wyników, zapisywanie logów i tworzenie wykresów.
-
-	\item \texttt{config.json} – plik konfiguracyjny (jeśli dotyczy), zawierający parametry trenowania, ścieżki do danych oraz ustawienia modelu.
 \end{enumerate}
 
-Każdy z wymienionych plików pełni określoną rolę w realizacji systemu korekcji błędów i może być dostosowany do innych zestawów danych lub zastosowań.
+\clearpage{}
+\subsection{Plik \texttt{DataLoader.py}}
+
+Moduł \texttt{DataLoader.py} odpowiada za ładowanie oraz wstępne przetwarzanie danych pomiarowych wykorzystywanych w procesie uczenia i testowania modeli.
+Główne zadania realizowane przez ten moduł to:
+
+\begin{itemize}
+	\item automatyczne lokalizowanie folderów z danymi wejściowymi (statycznymi i dynamicznymi),
+	\item odczyt danych z plików Excel (\texttt{.xlsx}) znajdujących się w podfolderach \texttt{F8} i \texttt{F10},
+	\item wstępne czyszczenie danych – usuwanie pustych wierszy,
+	\item selekcja i ekstrakcja cech sensorycznych z kolumn (np. akcelerometr, żyroskop, ciśnienie, kwaterniony),
+\end{itemize}
+
+Dane są dzielone na zbiór treningowy (pochodzący z plików statycznych) oraz testowy (z plików dynamicznych), a następnie przekształcane do postaci numerycznych macierzy przy pomocy biblioteki NumPy.
+Moduł ten stanowi fundament do dalszych etapów analizy i modelowania, zapewniając jednolite i ustandaryzowan
+
 \subsection{Plik \texttt{NeuralNetworkModel.py}}
 
 Plik \texttt{NeuralNetworkModel.py} zawiera kompletną implementację modelu sieci neuronowej zaprojektowanej z myślą o regresji wielowymiarowej oraz automatycznej detekcji i eliminacji obserwacji odstających (ang. outliers).
@@ -98,7 +115,45 @@ Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępn
 
 Architektura modelu jest w pełni parametryzowana: użytkownik może zdefiniować liczbę neuronów wejściowych, wyjściowych, strukturę warstw ukrytych, liczbę epok, współczynnik uczenia, funkcję aktywacji, metodę detekcji outlierów, a także urządzenie obliczeniowe (\texttt{CPU} lub \texttt{GPU}).
 
-Plik ten stanowi centralny element systemu korekcji błędów opartych na danych i może być łatwo zaadaptowany do innych zadań regresyjnych lub klasyfikacyjnych.
+\pagebreak
+\subsection{Plik \texttt{OutlierDetector.py}}
+
+Moduł \texttt{OutlierDetector.py} zawiera klasę \texttt{OutlierDetector}, która odpowiada za identyfikację oraz usuwanie odstających obserwacji (ang. \textit{outliers}) w danych wejściowych i wyjściowych modeli regresyjnych. Celem tego modułu jest poprawa jakości danych poprzez eliminację punktów, które mogą negatywnie wpłynąć na proces uczenia lub predykcji.
+
+\paragraph{}
+\textbf{Obsługiwane metody detekcji outlierów}:
+\begin{itemize}
+	\item \textbf{Z-score} – klasyczna metoda statystyczna oparta na standaryzacji zmiennych i analizie ich odchyleń od średniej.
+	\item \textbf{IQR (Interquartile Range)} – metoda oparta na analizie rozstępu międzykwartylowego (dolna i górna granica = $Q1 - 1.5 \cdot IQR$, $Q3 + 1.5 \cdot IQR$).
+	\item \textbf{Isolation Forest} – metoda oparta na modelu lasu losowego izolującego punkty anomalne.
+	\item \textbf{Odległość Mahalanobisa} – metoda uwzględniająca współzmienność danych i odległość od centroidu wielowymiarowego.
+	\item \textbf{Combined} – strategia łącząca wyniki trzech metod (Z-score, IQR, Mahalanobis); punkt uznawany jest za outlier, jeśli zostanie wykryty przez co najmniej dwie z nich.
+\end{itemize}
+
+\paragraph{}
+\textbf{Kluczowe cechy klasy \texttt{OutlierDetector}}:
+\begin{itemize}
+	\item Obsługuje brakujące dane (NaN, inf) poprzez ich czyszczenie lub zastępowanie medianą.
+	\item Uwzględnia błędy obliczeń numerycznych (np. osobliwość macierzy kowariancji).
+	\item Zawiera system awaryjny: w przypadku błędu w jednej metodzie, automatycznie używana jest metoda Z-score jako domyślna.
+	\item Dostarcza pełną analizę statystyczną: liczba wykrytych outlierów, procentowy udział oraz rozmiar zbioru po filtracji.
+\end{itemize}
+
+\paragraph{}
+\textbf{Główne metody klasy}:
+\begin{itemize}
+	\item \texttt{detect\_outliers\_zscore(data, threshold)} – detekcja przy użyciu standaryzacji i progu odcięcia.
+	\item \texttt{detect\_outliers\_iqr(data)} – detekcja oparta na kwartylach.
+	\item \texttt{detect\_outliers\_isolation\_forest(data)} – detekcja z wykorzystaniem modelu \texttt{IsolationForest}.
+	\item \texttt{detect\_outliers\_mahalanobis(data)} – detekcja w oparciu o wielowymiarową odległość Mahalanobisa.
+	\item \texttt{detect\_outliers(X, Y)} – metoda główna, wykonująca detekcję na połączonych danych wejściowych i wyjściowych.
+	\item \texttt{filter\_data(X, Y)} – zwraca przefiltrowane dane z usuniętymi outlierami.
+	\item \texttt{outlierDetector(X, Y)} – metoda pomocnicza, kompatybilna z interfejsem używanym w kodzie sieci neuronowej.
+\end{itemize}
+
+\paragraph{}
+Moduł umożliwia elastyczne dostosowanie metody detekcji poprzez parametr \texttt{method} podawany w konstruktorze. Dodatkowo zastosowano szeroko zakrojone zabezpieczenia przed nieoczekiwanym zachowaniem danych, w tym sprawdzanie ich poprawności, kształtów, oraz odpowiednie logowanie przebiegu przetwarzania.
+
 
 \section{Materiały i metody}
  {\color{blue}

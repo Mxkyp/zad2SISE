@@ -97,6 +97,9 @@ INPUT ./nn.png
 INPUT /usr/share/texmf/fonts/enc/dvips/pl/pltt.enc
 INPUT /usr/share/texmf/fonts/tfm/public/pl/plr10.tfm
 INPUT sprawozdanie.aux
+INPUT /usr/share/texmf/fonts/type1/public/amsfonts/cm/cmmi12.pfb
+INPUT /usr/share/texmf/fonts/type1/public/amsfonts/cm/cmr12.pfb
+INPUT /usr/share/texmf/fonts/type1/public/amsfonts/cm/cmsy10.pfb
 INPUT /usr/share/texmf/fonts/type1/public/pl/plbx12.pfb
 INPUT /usr/share/texmf/fonts/type1/public/pl/plr10.pfb
 INPUT /usr/share/texmf/fonts/type1/public/pl/plr12.pfb

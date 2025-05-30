@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1748627466.3398 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748627467.72812 0
-  "./sprawozdanie.tex" 1748627464.72313 8720 be0a007bab5a47b4d19632f14583ea12 ""
+["pdflatex"] 1748629198.1508 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748629198.74966 0
+  "./sprawozdanie.tex" 1748629196.98742 12282 a01e005b54148dc8f0a6b1ed9ed3f5bd ""
   "/etc/texmf/web2c/texmf.cnf" 1741769514 43179 d4d8625c4224f516afc2b9ae03b45f2d ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plit.enc" 1136849721 1946 62ba825cda1ff16dbaa60d53ac60525a ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plrm.enc" 1136849721 1944 1845592c00bbe510359fd6887a83ff72 ""
@@ -23,6 +23,9 @@
   "/usr/share/texmf/fonts/tfm/public/pl/plr17.tfm" 1136768653 2080 b61c70f1a22b45d92358c39b67ea9906 ""
   "/usr/share/texmf/fonts/tfm/public/pl/plti12.tfm" 1136768653 2248 f77d595f67089cf2926494dc25800828 ""
   "/usr/share/texmf/fonts/tfm/public/pl/pltt12.tfm" 1136768653 1284 c8c4a3eceb0e687daf7c6971a24f073f ""
+  "/usr/share/texmf/fonts/type1/public/amsfonts/cm/cmmi12.pfb" 1248133631 36741 fa121aac0049305630cf160b86157ee4 ""
+  "/usr/share/texmf/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1248133631 32722 d7379af29a190c3f453aba36302ff5a9 ""
+  "/usr/share/texmf/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/share/texmf/fonts/type1/public/pl/plbx12.pfb" 1136849748 26733 3fa55bab1df289b642fa8cd9e61fb25f ""
   "/usr/share/texmf/fonts/type1/public/pl/plr10.pfb" 1136849748 27396 59c827d3c8566d0d9cbf81ac7c0d162a ""
   "/usr/share/texmf/fonts/type1/public/pl/plr12.pfb" 1136849748 27754 6f5ae55af1b64df2aab0bbeada447136 ""
@@ -57,8 +60,8 @@
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1748445726 3165197 68fdff49e8927b84855913b37ddd19a6 ""
   "classrep.cls" 1748626000.49685 2516 6cfcfe56e7ef3589ddf29da5789a508a ""
   "nn.png" 1748626000.49876 184869 63a25c34a0157a5656d758e1bd159378 ""
-  "sprawozdanie.aux" 1748627467.65844 1344 33c6d0189c2f97f56f90c6c224270ba9 "pdflatex"
-  "sprawozdanie.tex" 1748627464.72313 8720 be0a007bab5a47b4d19632f14583ea12 ""
+  "sprawozdanie.aux" 1748629198.71166 1629 84ef87fa76af7f6f9b02f15b4d8ce721 "pdflatex"
+  "sprawozdanie.tex" 1748629196.98742 12282 a01e005b54148dc8f0a6b1ed9ed3f5bd ""
   (generated)
   "sprawozdanie.aux"
   "sprawozdanie.log"
