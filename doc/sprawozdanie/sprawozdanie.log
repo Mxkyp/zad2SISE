@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  30 MAY 2025 20:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  30 MAY 2025 20:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -220,9 +220,6 @@ Overfull \hbox (6.81949pt too wide) in paragraph at lines 116--117
  []
 
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
 
 [4
 
@@ -240,9 +237,13 @@ de-tek-cja z wy-ko-rzy-sta-niem
 
 
 
-[5]
+[5
 
-[6]
+]
+
+[6
+
+]
 
 [7] (./sprawozdanie.aux)
  ***********
@@ -265,7 +266,7 @@ amsfonts/cm/cmsy10.pfb></usr/share/texmf/fonts/type1/public/pl/plbx12.pfb></usr
 ic/pl/plr12.pfb></usr/share/texmf/fonts/type1/public/pl/plr17.pfb></usr/share/t
 exmf/fonts/type1/public/pl/plti12.pfb></usr/share/texmf/fonts/type1/public/pl/p
 ltt12.pfb>
-Output written on sprawozdanie.pdf (7 pages, 263410 bytes).
+Output written on sprawozdanie.pdf (7 pages, 263155 bytes).
 PDF statistics:
  79 PDF objects out of 1000 (max. 8388607)
  49 compressed objects within 1 object stream

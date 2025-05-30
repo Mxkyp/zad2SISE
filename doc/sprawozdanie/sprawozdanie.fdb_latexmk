@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1748629198.1508 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748629198.74966 0
-  "./sprawozdanie.tex" 1748629196.98742 12282 a01e005b54148dc8f0a6b1ed9ed3f5bd ""
+["pdflatex"] 1748629614.04223 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748629614.64943 0
+  "./sprawozdanie.tex" 1748629612.06152 11995 f80ad0790c5ef5e4e162639dc1f6ceef ""
   "/etc/texmf/web2c/texmf.cnf" 1741769514 43179 d4d8625c4224f516afc2b9ae03b45f2d ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plit.enc" 1136849721 1946 62ba825cda1ff16dbaa60d53ac60525a ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plrm.enc" 1136849721 1944 1845592c00bbe510359fd6887a83ff72 ""
@@ -60,8 +60,8 @@
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1748445726 3165197 68fdff49e8927b84855913b37ddd19a6 ""
   "classrep.cls" 1748626000.49685 2516 6cfcfe56e7ef3589ddf29da5789a508a ""
   "nn.png" 1748626000.49876 184869 63a25c34a0157a5656d758e1bd159378 ""
-  "sprawozdanie.aux" 1748629198.71166 1629 84ef87fa76af7f6f9b02f15b4d8ce721 "pdflatex"
-  "sprawozdanie.tex" 1748629196.98742 12282 a01e005b54148dc8f0a6b1ed9ed3f5bd ""
+  "sprawozdanie.aux" 1748629614.61079 1629 6dab7bc8eb2b3b131aa9766e5e95e70c "pdflatex"
+  "sprawozdanie.tex" 1748629612.06152 11995 f80ad0790c5ef5e4e162639dc1f6ceef ""
   (generated)
   "sprawozdanie.aux"
   "sprawozdanie.log"

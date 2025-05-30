@@ -88,16 +88,16 @@ Projekt został podzielony na następujące pliki:
 
 Moduł \texttt{DataLoader.py} odpowiada za ładowanie oraz wstępne przetwarzanie danych pomiarowych wykorzystywanych w procesie uczenia i testowania modeli.
 Główne zadania realizowane przez ten moduł to:
-
 \begin{itemize}
 	\item automatyczne lokalizowanie folderów z danymi wejściowymi (statycznymi i dynamicznymi),
 	\item odczyt danych z plików Excel (\texttt{.xlsx}) znajdujących się w podfolderach \texttt{F8} i \texttt{F10},
 	\item wstępne czyszczenie danych – usuwanie pustych wierszy,
 	\item selekcja i ekstrakcja cech sensorycznych z kolumn (np. akcelerometr, żyroskop, ciśnienie, kwaterniony),
 \end{itemize}
-
 Dane są dzielone na zbiór treningowy (pochodzący z plików statycznych) oraz testowy (z plików dynamicznych), a następnie przekształcane do postaci numerycznych macierzy przy pomocy biblioteki NumPy.
 Moduł ten stanowi fundament do dalszych etapów analizy i modelowania, zapewniając jednolite i ustandaryzowan
+
+\noindent\rule{8cm}{0.4pt}
 
 \subsection{Plik \texttt{NeuralNetworkModel.py}}
 
@@ -115,7 +115,7 @@ Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępn
 
 Architektura modelu jest w pełni parametryzowana: użytkownik może zdefiniować liczbę neuronów wejściowych, wyjściowych, strukturę warstw ukrytych, liczbę epok, współczynnik uczenia, funkcję aktywacji, metodę detekcji outlierów, a także urządzenie obliczeniowe (\texttt{CPU} lub \texttt{GPU}).
 
-\pagebreak
+\clearpage{}
 \subsection{Plik \texttt{OutlierDetector.py}}
 
 Moduł \texttt{OutlierDetector.py} zawiera klasę \texttt{OutlierDetector}, która odpowiada za identyfikację oraz usuwanie odstających obserwacji (ang. \textit{outliers}) w danych wejściowych i wyjściowych modeli regresyjnych. Celem tego modułu jest poprawa jakości danych poprzez eliminację punktów, które mogą negatywnie wpłynąć na proces uczenia lub predykcji.
@@ -151,9 +151,7 @@ Moduł \texttt{OutlierDetector.py} zawiera klasę \texttt{OutlierDetector}, któ
 	\item \texttt{outlierDetector(X, Y)} – metoda pomocnicza, kompatybilna z interfejsem używanym w kodzie sieci neuronowej.
 \end{itemize}
 
-\paragraph{}
-Moduł umożliwia elastyczne dostosowanie metody detekcji poprzez parametr \texttt{method} podawany w konstruktorze. Dodatkowo zastosowano szeroko zakrojone zabezpieczenia przed nieoczekiwanym zachowaniem danych, w tym sprawdzanie ich poprawności, kształtów, oraz odpowiednie logowanie przebiegu przetwarzania.
-
+\clearpage{}
 
 \section{Materiały i metody}
  {\color{blue}
