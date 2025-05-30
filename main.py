@@ -4,7 +4,7 @@ import DataLoader as dl
 
 
 def prepareTrainingData():
-    df_training, df_testing = dl.load_all_data(dl.STATIC)
+    df_training = dl.load_all_data(dl.STATIC)
 
     df_training = df_training.dropna(
         subset=[
@@ -29,8 +29,8 @@ def prepareTrainingData():
 
 
 def main():
-    inTrain, targetTrain, inTest, targetTest = prepareTrainingData()
-    debilNetwork.train_model(inTrain, targetTrain, 70)
+    inTrain, targetTrain = prepareTrainingData()
+    debilNetwork.train_model(inTrain, targetTrain, 500)
 
 
 main()
