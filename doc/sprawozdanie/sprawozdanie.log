@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  30 MAY 2025 20:26
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  30 MAY 2025 20:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -201,20 +201,20 @@ LaTeX Font Warning: Font shape `OT4/cmtt/bx/n' in size <12> not available
 (Font)              Font shape `OT4/cmtt/m/n' tried instead on input line 87.
 
 
-Overfull \hbox (8.94205pt too wide) in paragraph at lines 109--110
+Overfull \hbox (8.94205pt too wide) in paragraph at lines 111--112
 []\OT4/cmtt/m/n/12 EnhancedNeuralNetworkModel \OT4/cmr/m/n/12 { kla-sa wy»-sze-
 go po-zio-mu in-te-gru-j¡-ca funk-
  []
 
 
-Overfull \hbox (38.98001pt too wide) in paragraph at lines 112--113
+Overfull \hbox (38.98001pt too wide) in paragraph at lines 115--116
 \OT4/cmr/m/n/12 me-cha-nizm \OT4/cmr/m/it/12 ear-ly stop-ping\OT4/cmr/m/n/12 , 
 ad-ap-ta-cyj-ny har-mo-no-gram ucze-nia (\OT4/cmtt/m/n/12 ReduceLROnPlateau\OT4
 /cmr/m/n/12 )
  []
 
 
-Overfull \hbox (6.81949pt too wide) in paragraph at lines 116--117
+Overfull \hbox (6.81949pt too wide) in paragraph at lines 119--120
 \OT4/cmr/m/n/12 zde-fi-nio-wa¢ licz-b¦ neu-ro-nów wej-±cio-wych, wyj-±cio-wych,
  struk-tu-r¦ warstw ukry-
  []
@@ -224,13 +224,13 @@ Overfull \hbox (6.81949pt too wide) in paragraph at lines 116--117
 [4
 
 ]
-Overfull \hbox (7.0349pt too wide) in paragraph at lines 145--146
+Overfull \hbox (7.0349pt too wide) in paragraph at lines 148--149
 []\OT4/cmtt/m/n/12 detect[]outliers[]zscore(data, threshold) \OT4/cmr/m/n/12 { 
 de-tek-cja przy u»y-ciu stan-
  []
 
 
-Overfull \hbox (3.04752pt too wide) in paragraph at lines 147--148
+Overfull \hbox (3.04752pt too wide) in paragraph at lines 150--151
 []\OT4/cmtt/m/n/12 detect[]outliers[]isolation[]forest(data) \OT4/cmr/m/n/12 { 
 de-tek-cja z wy-ko-rzy-sta-niem
  []
@@ -240,6 +240,13 @@ de-tek-cja z wy-ko-rzy-sta-niem
 [5
 
 ]
+Overfull \hbox (124.23975pt too wide) in paragraph at lines 190--191
+[]\OT4/cmr/m/n/12 Dane wyj-±cio-we: \OT4/cmtt/m/n/12 dystrybuanta[]*.xlsx\OT4/c
+mr/m/n/12 , \OT4/cmtt/m/n/12 wyniki[]szczegolowe.xlsx\OT4/cmr/m/n/12 , \OT4/cmt
+t/m/n/12 raport[]podsumowanie.txt\OT4/cmr/m/n/12 . 
+ []
+
+
 
 [6
 
@@ -252,10 +259,10 @@ L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 3276 strings out of 474237
- 56081 string characters out of 5742824
+ 3277 strings out of 474237
+ 56098 string characters out of 5742824
  448235 words of memory out of 5000000
- 26354 multiletter control sequences out of 15000+600000
+ 26355 multiletter control sequences out of 15000+600000
  566006 words of font info for 55 fonts, out of 8000000 for 9000
  475 hyphenation exceptions out of 8191
  58i,7n,71p,426b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -266,7 +273,7 @@ amsfonts/cm/cmsy10.pfb></usr/share/texmf/fonts/type1/public/pl/plbx12.pfb></usr
 ic/pl/plr12.pfb></usr/share/texmf/fonts/type1/public/pl/plr17.pfb></usr/share/t
 exmf/fonts/type1/public/pl/plti12.pfb></usr/share/texmf/fonts/type1/public/pl/p
 ltt12.pfb>
-Output written on sprawozdanie.pdf (7 pages, 263155 bytes).
+Output written on sprawozdanie.pdf (7 pages, 265450 bytes).
 PDF statistics:
  79 PDF objects out of 1000 (max. 8388607)
  49 compressed objects within 1 object stream

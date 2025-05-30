@@ -94,6 +94,7 @@ Główne zadania realizowane przez ten moduł to:
 	\item wstępne czyszczenie danych – usuwanie pustych wierszy,
 	\item selekcja i ekstrakcja cech sensorycznych z kolumn (np. akcelerometr, żyroskop, ciśnienie, kwaterniony),
 \end{itemize}
+\paragraph{}
 Dane są dzielone na zbiór treningowy (pochodzący z plików statycznych) oraz testowy (z plików dynamicznych), a następnie przekształcane do postaci numerycznych macierzy przy pomocy biblioteki NumPy.
 Moduł ten stanowi fundament do dalszych etapów analizy i modelowania, zapewniając jednolite i ustandaryzowan
 
@@ -103,12 +104,14 @@ Moduł ten stanowi fundament do dalszych etapów analizy i modelowania, zapewnia
 
 Plik \texttt{NeuralNetworkModel.py} zawiera kompletną implementację modelu sieci neuronowej zaprojektowanej z myślą o regresji wielowymiarowej oraz automatycznej detekcji i eliminacji obserwacji odstających (ang. outliers).
 
+\paragraph{}
 Moduł składa się z dwóch głównych klas:
 \begin{itemize}
 	\item \texttt{NeuralNetwork} – definiuje architekturę wielowarstwowej sieci neuronowej typu \textit{feedforward} z konfigurowalną liczbą warstw ukrytych, funkcją aktywacji i mechanizmem \texttt{Dropout}.
 	\item \texttt{EnhancedNeuralNetworkModel} – klasa wyższego poziomu integrująca funkcje uczenia, walidacji, normalizacji danych, predykcji oraz obsługi danych odstających przy użyciu zewnętrznego modułu \texttt{OutlierDetector}.
 \end{itemize}
 
+\paragraph{}
 Model wspiera różne optymalizatory (Adam, SGD), posiada wbudowany mechanizm \textit{early stopping}, adaptacyjny harmonogram uczenia (\texttt{ReduceLROnPlateau}) oraz możliwość zapisu i odczytu wag modelu (zarówno w formacie binarnym \texttt{.pt}, jak i w postaci tabeli CSV).
 
 Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępnie przeskalowywane za pomocą standaryzacji (\texttt{StandardScaler}) z biblioteki \texttt{scikit-learn}. Proces walidacji może być przeprowadzony na osobnym zbiorze lub automatycznie podzielony z danych treningowych.
@@ -152,6 +155,42 @@ Moduł \texttt{OutlierDetector.py} zawiera klasę \texttt{OutlierDetector}, któ
 \end{itemize}
 
 \clearpage{}
+
+\subsection{Plik \texttt{main.py}}
+
+\subsubsection*{Główna funkcja \texttt{main()}}
+
+Funkcja \texttt{main()} zawiera pełny pipeline systemu korekcji i składa się z następujących etapów:
+
+\begin{enumerate}
+	\item Wczytanie danych uczących i testowych przy pomocy klasy \texttt{DataLoader}.
+
+	\item Utworzenie i trenowanie dwóch modeli sieci neuronowych:
+	      \begin{itemize}
+		      \item bez usuwania wartości odstających (outlierów),
+		      \item z eliminacją outlierów przy użyciu złożonej metody detekcji.
+	      \end{itemize}
+
+	\item Przewidywanie błędów przez modele, ich odejmowanie od danych wejściowych oraz ocena skuteczności korekcji.
+
+	\item Obliczenie metryk błędu dla każdego z podejść oraz zapis wyników do pliku tekstowego i arkusza kalkulacyjnego.
+
+	\item Generowanie wykresów i zapis danych dystrybuanty błędów do plików \texttt{.xlsx}.
+
+	\item Zapis wytrenowanych modeli w formacie PyTorch (\texttt{.pth}).
+\end{enumerate}
+
+\subsubsection*{Efekty działania i generowane pliki}
+
+W wyniku działania programu generowane są:
+
+\begin{itemize}
+	\item Wykresy: \texttt{training\_history.png}, \texttt{error\_analysis\_*.png},
+	\item Modele: \texttt{model\_bez\_outlierow.pth}, \texttt{model\_z\_outlierami.pth},
+	\item Dane wyjściowe: \texttt{dystrybuanta\_*.xlsx}, \texttt{wyniki\_szczegolowe.xlsx}, \texttt{raport\_podsumowanie.txt}.
+\end{itemize}
+
+Plik ten stanowi główny komponent praktyczny systemu korekcji błędów i integruje cały proces od wczytania danych po ocenę skuteczności modelu.
 
 \section{Materiały i metody}
  {\color{blue}
