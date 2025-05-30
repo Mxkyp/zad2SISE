@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import os
 
+
 class DataLoader:
     """Klasa do ładowania i przetwarzania danych"""
 
@@ -15,7 +16,7 @@ class DataLoader:
     @staticmethod
     def get_base_path():
         """Pobiera ścieżkę do folderu z danymi"""
-        return os.path.join(os.path.dirname(__file__), 'dane')
+        return os.path.join(os.path.dirname(__file__), "dane")
 
     @staticmethod
     def load_data_excel():
@@ -40,32 +41,48 @@ class DataLoader:
             for folder_path in [f8_path, f10_path]:
                 if os.path.exists(folder_path):
                     static_files = glob.glob(os.path.join(folder_path, "*stat*.xlsx"))
-                    print(f"\nZnaleziono {len(static_files)} plików statycznych w {folder_path}")
+                    print(
+                        f"\nZnaleziono {len(static_files)} plików statycznych w {folder_path}"
+                    )
 
                     for file_path in static_files:
                         try:
                             df = pd.read_excel(file_path)
-                            print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
+                            df.dropna(inplace=True)
+                            print(
+                                f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek"
+                            )
                             all_data.append(df)
                         except Exception as e:
-                            print(f"  Błąd ładowania {os.path.basename(file_path)}: {e}")
+                            print(
+                                f"  Błąd ładowania {os.path.basename(file_path)}: {e}"
+                            )
                 else:
                     print(f"Folder {folder_path} nie istnieje")
 
             # Jeśli nie znaleziono plików w podfolderach F8/F10, szukaj bezpośrednio w folderze dane
             if not all_data:
-                print(f"\nNie znaleziono plików w podfolderach, szukam bezpośrednio w {base_path}")
+                print(
+                    f"\nNie znaleziono plików w podfolderach, szukam bezpośrednio w {base_path}"
+                )
                 if os.path.exists(base_path):
                     static_files = glob.glob(os.path.join(base_path, "*stat*.xlsx"))
-                    print(f"Znaleziono {len(static_files)} plików statycznych w {base_path}")
+                    print(
+                        f"Znaleziono {len(static_files)} plików statycznych w {base_path}"
+                    )
 
                     for file_path in static_files:
                         try:
                             df = pd.read_excel(file_path)
-                            print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
+                            df.dropna(inplace=True)
+                            print(
+                                f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek"
+                            )
                             all_data.append(df)
                         except Exception as e:
-                            print(f"  Błąd ładowania {os.path.basename(file_path)}: {e}")
+                            print(
+                                f"  Błąd ładowania {os.path.basename(file_path)}: {e}"
+                            )
 
             if all_data:
                 combined_data = pd.concat(all_data, ignore_index=True)
@@ -84,38 +101,60 @@ class DataLoader:
                 if os.path.exists(folder_path):
                     # Pliki dynamiczne to te bez 'stat' i bez 'random' w nazwie
                     all_files = glob.glob(os.path.join(folder_path, "*.xlsx"))
-                    dynamic_files = [f for f in all_files
-                                     if 'stat' not in os.path.basename(f) and 'random' not in os.path.basename(f)]
+                    dynamic_files = [
+                        f
+                        for f in all_files
+                        if "stat" not in os.path.basename(f)
+                        and "random" not in os.path.basename(f)
+                    ]
 
-                    print(f"\nZnaleziono {len(dynamic_files)} plików dynamicznych w {folder_path}")
+                    print(
+                        f"\nZnaleziono {len(dynamic_files)} plików dynamicznych w {folder_path}"
+                    )
 
                     for file_path in dynamic_files:
                         try:
                             df = pd.read_excel(file_path)
-                            print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
+                            print(
+                                f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek"
+                            )
                             all_data.append(df)
                         except Exception as e:
-                            print(f"  Błąd ładowania {os.path.basename(file_path)}: {e}")
+                            print(
+                                f"  Błąd ładowania {os.path.basename(file_path)}: {e}"
+                            )
                 else:
                     print(f"Folder {folder_path} nie istnieje")
 
             # Jeśli nie znaleziono plików w podfolderach F8/F10, szukaj bezpośrednio w folderze dane
             if not all_data:
-                print(f"\nNie znaleziono plików w podfolderach, szukam bezpośrednio w {base_path}")
+                print(
+                    f"\nNie znaleziono plików w podfolderach, szukam bezpośrednio w {base_path}"
+                )
                 if os.path.exists(base_path):
                     all_files = glob.glob(os.path.join(base_path, "*.xlsx"))
-                    dynamic_files = [f for f in all_files
-                                     if 'stat' not in os.path.basename(f) and 'random' not in os.path.basename(f)]
+                    dynamic_files = [
+                        f
+                        for f in all_files
+                        if "stat" not in os.path.basename(f)
+                        and "random" not in os.path.basename(f)
+                    ]
 
-                    print(f"Znaleziono {len(dynamic_files)} plików dynamicznych w {base_path}")
+                    print(
+                        f"Znaleziono {len(dynamic_files)} plików dynamicznych w {base_path}"
+                    )
 
                     for file_path in dynamic_files:
                         try:
                             df = pd.read_excel(file_path)
-                            print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
+                            print(
+                                f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek"
+                            )
                             all_data.append(df)
                         except Exception as e:
-                            print(f"  Błąd ładowania {os.path.basename(file_path)}: {e}")
+                            print(
+                                f"  Błąd ładowania {os.path.basename(file_path)}: {e}"
+                            )
 
             if all_data:
                 combined_data = pd.concat(all_data, ignore_index=True)
@@ -162,12 +201,17 @@ class DataLoader:
 
         # Filtrowanie dostępnych cech
         available_features = [col for col in feature_cols if col in df.columns]
-        print(f"\nDostępne cechy sensoryczne: {len(available_features)}/{len(feature_cols)}")
+        print(
+            f"\nDostępne cechy sensoryczne: {len(available_features)}/{len(feature_cols)}"
+        )
 
         if not available_features:
             print("Nie znaleziono żadnych cech sensorycznych!")
             # Fallback - użyj współrzędnych jako cech wejściowych
-            if "data__coordinates__x" in df.columns and "data__coordinates__y" in df.columns:
+            if (
+                "data__coordinates__x" in df.columns
+                and "data__coordinates__y" in df.columns
+            ):
                 print("Używam współrzędnych jako cech wejściowych")
                 available_features = ["data__coordinates__x", "data__coordinates__y"]
             else:
@@ -182,14 +226,21 @@ class DataLoader:
             print("Brak kolumn referencyjnych! Sprawdź strukturę danych.")
             return None, None, available_features
 
-        if "data__coordinates__x" not in df.columns or "data__coordinates__y" not in df.columns:
+        if (
+            "data__coordinates__x" not in df.columns
+            or "data__coordinates__y" not in df.columns
+        ):
             print("Brak kolumn współrzędnych! Sprawdź strukturę danych.")
             return None, None, available_features
 
         # Obliczenie błędów (różnica między zmierzonymi a rzeczywistymi współrzędnymi)
         df_clean = df.copy()
-        df_clean["error_x"] = df_clean["data__coordinates__x"] - df_clean["reference__x"]
-        df_clean["error_y"] = df_clean["data__coordinates__y"] - df_clean["reference__y"]
+        df_clean["error_x"] = (
+            df_clean["data__coordinates__x"] - df_clean["reference__x"]
+        )
+        df_clean["error_y"] = (
+            df_clean["data__coordinates__y"] - df_clean["reference__y"]
+        )
         Y = df_clean[["error_x", "error_y"]].values
 
         print(f"Kształt danych X: {X.shape}")
