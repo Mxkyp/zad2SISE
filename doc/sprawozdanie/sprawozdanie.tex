@@ -59,11 +59,46 @@ Sieć nazywa się \textbf{głęboką siecią neuronową}, jeśli zawiera co najm
 Sztuczne sieci neuronowe są wykorzystywane w różnych zadaniach, takich jak \textit{modelowanie predykcyjne}, \textit{sterowanie adaptacyjne} czy \textit{rozwiązywanie problemów z zakresu sztucznej inteligencji}. Potrafią uczyć się na podstawie doświadczenia i wyciągać wnioski z złożonych i pozornie niepowiązanych danych.
 
 \section{Opis implementacji}
- {\color{blue}
-  Należy tu zamieścić krótki i zwięzły opis zaprojektowanych klas oraz powiązań
-  między nimi. Powinien się tu również znaleźć diagram UML (diagram klas)
-  prezentujący najistotniejsze elementy stworzonej aplikacji. Należy także podać,
-  w jakim języku programowania została stworzona aplikacja.}
+Zadanie zostało wykonane przy użyciu języka \textbf{Python3}, przy użyciu następujących bibliotek:
+\begin{itemize}
+	\item{\texttt{Matplotlib}}
+	\item{\texttt{Numpy}}
+	\item{\texttt{PyTorch}}
+\end{itemize}
+
+\pagebreak
+Projekt został podzielony na następujące pliki.
+
+\begin{enumerate}
+	\item \texttt{NeuralNetworkModel.py} – główny moduł modelu uczenia maszynowego oparty na sieci neuronowej. Odpowiada za tworzenie, trenowanie, testowanie i zapisywanie modelu, z uwzględnieniem mechanizmów detekcji outlierów i normalizacji danych.
+
+	\item \texttt{OutlierDetector.py} – moduł odpowiedzialny za identyfikację obserwacji odstających w danych wejściowych. Wspiera różne metody detekcji, m.in. oparte na odległości Mahalanobisa czy odchyleniu standardowym.
+
+	\item \texttt{main.py} – plik uruchomieniowy, zawierający konfigurację eksperymentów, wczytywanie danych, inicjalizację modelu oraz zapisywanie wyników i metryk. Stanowi punkt wejścia do całego systemu.
+
+	\item \texttt{utils.py} – zbiór funkcji pomocniczych, takich jak wczytywanie danych, wizualizacja wyników, zapisywanie logów i tworzenie wykresów.
+
+	\item \texttt{config.json} – plik konfiguracyjny (jeśli dotyczy), zawierający parametry trenowania, ścieżki do danych oraz ustawienia modelu.
+\end{enumerate}
+
+Każdy z wymienionych plików pełni określoną rolę w realizacji systemu korekcji błędów i może być dostosowany do innych zestawów danych lub zastosowań.
+\subsection{Plik \texttt{NeuralNetworkModel.py}}
+
+Plik \texttt{NeuralNetworkModel.py} zawiera kompletną implementację modelu sieci neuronowej zaprojektowanej z myślą o regresji wielowymiarowej oraz automatycznej detekcji i eliminacji obserwacji odstających (ang. outliers).
+
+Moduł składa się z dwóch głównych klas:
+\begin{itemize}
+	\item \texttt{NeuralNetwork} – definiuje architekturę wielowarstwowej sieci neuronowej typu \textit{feedforward} z konfigurowalną liczbą warstw ukrytych, funkcją aktywacji i mechanizmem \texttt{Dropout}.
+	\item \texttt{EnhancedNeuralNetworkModel} – klasa wyższego poziomu integrująca funkcje uczenia, walidacji, normalizacji danych, predykcji oraz obsługi danych odstających przy użyciu zewnętrznego modułu \texttt{OutlierDetector}.
+\end{itemize}
+
+Model wspiera różne optymalizatory (Adam, SGD), posiada wbudowany mechanizm \textit{early stopping}, adaptacyjny harmonogram uczenia (\texttt{ReduceLROnPlateau}) oraz możliwość zapisu i odczytu wag modelu (zarówno w formacie binarnym \texttt{.pt}, jak i w postaci tabeli CSV).
+
+Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępnie przeskalowywane za pomocą standaryzacji (\texttt{StandardScaler}) z biblioteki \texttt{scikit-learn}. Proces walidacji może być przeprowadzony na osobnym zbiorze lub automatycznie podzielony z danych treningowych.
+
+Architektura modelu jest w pełni parametryzowana: użytkownik może zdefiniować liczbę neuronów wejściowych, wyjściowych, strukturę warstw ukrytych, liczbę epok, współczynnik uczenia, funkcję aktywacji, metodę detekcji outlierów, a także urządzenie obliczeniowe (\texttt{CPU} lub \texttt{GPU}).
+
+Plik ten stanowi centralny element systemu korekcji błędów opartych na danych i może być łatwo zaadaptowany do innych zadań regresyjnych lub klasyfikacyjnych.
 
 \section{Materiały i metody}
  {\color{blue}

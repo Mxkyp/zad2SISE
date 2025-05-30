@@ -1,8 +1,8 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  29 MAY 2025 12:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025/TeX Live for SUSE Linux) (preloaded format=pdflatex 2025.5.28)  30 MAY 2025 19:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**sprawozdanie.tex
+**./sprawozdanie.tex
 (./sprawozdanie.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
@@ -190,31 +190,62 @@ File: nn.png Graphic file (type png)
 Package pdftex.def Info: nn.png  used on input line 54.
 (pdftex.def)             Requested size: 256.95544pt x 309.14952pt.
 
+Underfull \vbox (badness 1960) has occurred while \output is active []
 
-[2 <./nn.png>]
 
-[3] (./sprawozdanie.aux)
+
+[2{/usr/share/texmf/fonts/enc/dvips/pl/pltt.enc} <./nn.png>]
+
+LaTeX Font Warning: Font shape `OT4/cmtt/bx/n' in size <12> not available
+(Font)              Font shape `OT4/cmtt/m/n' tried instead on input line 85.
+
+
+Overfull \hbox (8.94205pt too wide) in paragraph at lines 92--93
+[]\OT4/cmtt/m/n/12 EnhancedNeuralNetworkModel \OT4/cmr/m/n/12 { kla-sa wy»-sze-
+go po-zio-mu in-te-gru-j¡-ca funk-
+ []
+
+
+Overfull \hbox (38.98001pt too wide) in paragraph at lines 95--96
+\OT4/cmr/m/n/12 me-cha-nizm \OT4/cmr/m/it/12 ear-ly stop-ping\OT4/cmr/m/n/12 , 
+ad-ap-ta-cyj-ny har-mo-no-gram ucze-nia (\OT4/cmtt/m/n/12 ReduceLROnPlateau\OT4
+/cmr/m/n/12 )
+ []
+
+
+Overfull \hbox (6.81949pt too wide) in paragraph at lines 99--100
+\OT4/cmr/m/n/12 zde-fi-nio-wa¢ licz-b¦ neu-ro-nów wej-±cio-wych, wyj-±cio-wych,
+ struk-tu-r¦ warstw ukry-
+ []
+
+
+
+[3]
+
+[4]
+
+[5] (./sprawozdanie.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 3268 strings out of 474237
- 55903 string characters out of 5742824
- 445235 words of memory out of 5000000
- 26347 multiletter control sequences out of 15000+600000
+ 3275 strings out of 474237
+ 56063 string characters out of 5742824
+ 447235 words of memory out of 5000000
+ 26353 multiletter control sequences out of 15000+600000
  566006 words of font info for 55 fonts, out of 8000000 for 9000
  475 hyphenation exceptions out of 8191
- 58i,7n,71p,374b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 58i,7n,71p,376b,337s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/type1/public/pl/plbx12.pfb></usr/share/texmf/fonts/ty
 pe1/public/pl/plr10.pfb></usr/share/texmf/fonts/type1/public/pl/plr12.pfb></usr
 /share/texmf/fonts/type1/public/pl/plr17.pfb></usr/share/texmf/fonts/type1/publ
-ic/pl/plti12.pfb>
-Output written on sprawozdanie.pdf (3 pages, 216661 bytes).
+ic/pl/plti12.pfb></usr/share/texmf/fonts/type1/public/pl/pltt12.pfb>
+Output written on sprawozdanie.pdf (5 pages, 230430 bytes).
 PDF statistics:
- 44 PDF objects out of 1000 (max. 8388607)
- 26 compressed objects within 1 object stream
+ 56 PDF objects out of 1000 (max. 8388607)
+ 34 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
