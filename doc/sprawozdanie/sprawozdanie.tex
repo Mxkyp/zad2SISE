@@ -32,6 +32,8 @@
 
 \section{Wprowadzenie}
 \paragraph{}
+
+\subsection{Sieć neuronowa}
 \textbf{Sieć neuronowa} (znana również jako \textit{sztuczna sieć neuronowa},
 w skrócie \textbf{NN} lub \textbf{ANN})
 to model obliczeniowy inspirowany strukturą i funkcjami biologicznych sieci neuronowych.
@@ -57,7 +59,49 @@ Sieć nazywa się \textbf{głęboką siecią neuronową}, jeśli zawiera co najm
 \end{figure}
 
 Sztuczne sieci neuronowe są wykorzystywane w różnych zadaniach, takich jak \textit{modelowanie predykcyjne}, \textit{sterowanie adaptacyjne} czy \textit{rozwiązywanie problemów z zakresu sztucznej inteligencji}. Potrafią uczyć się na podstawie doświadczenia i wyciągać wnioski z złożonych i pozornie niepowiązanych danych.
+\clearpage{}
+\subsection{Systemy lokalizacji UWB}
+Technologia \textbf{Ultra-Wideband (UWB)} wykorzystuje krótkie impulsy radiowe o bardzo szerokim paśmie częstotliwości (powyżej 500 MHz), co umożliwia precyzyjny pomiar odległości między nadajnikiem a odbiornikiem. Główną zaletą UWB jest wysoka odporność na zakłócenia wielodrogowe (\textit{multipath}) oraz możliwość osiągnięcia dokładności lokalizacji rzędu \textbf{kilku centymetrów}.
 
+Kluczowe metody lokalizacji w UWB obejmują:
+\begin{itemize}
+	\item \textbf{TOA (Time of Arrival)} -- pomiar czasu dotarcia sygnału,
+	\item \textbf{TDOA (Time Difference of Arrival)} -- różnica czasu dotarcia do wielu odbiorników,
+	\item \textbf{RSSI (Received Signal Strength Indication)} -- pomiar mocy sygnału (mniej precyzyjny niż TOA/TDOA).
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.1]{uwb.png}
+	\caption{przykładowy system lokalizacji UWB}
+	\label{fig:uwb}
+\end{figure}
+
+\noindent Ograniczenia systemów UWB obejmują:
+\begin{itemize}
+	\item Wpływ przeszkód fizycznych (np. ściany) na propagację sygnału,
+	\item Błędy synchronizacji czasowej między urządzeniami,
+	\item Zależność od konfiguracji środowiska (np. rozmieszczenie anchorów).
+\end{itemize}
+\clearpage{}
+\subsection{Uczenie sieci neuronowej}
+Proces uczenia sieci neuronowej polega na dostosowywaniu wag połączeń między neuronami w celu minimalizacji funkcji straty (\textit{loss function}), która mierzy różnicę między przewidywaniami modelu a rzeczywistymi wartościami. Kluczowe etapy tego procesu obejmują:
+
+\begin{itemize}
+	\item \textbf{Propagację wprzód} (\textit{forward propagation}) -- obliczenie wyjścia sieci na podstawie danych wejściowych i aktualnych wag.
+	\item \textbf{Obliczenie funkcji straty} -- np. średni błąd kwadratowy (MSE) dla zadań regresji:
+	      \begin{equation}
+		      \text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,
+	      \end{equation}
+	      gdzie \( y_i \) to wartość rzeczywista, a \( \hat{y}_i \) to przewidywana wartość.
+	\item \textbf{Propagację wsteczną} (\textit{backpropagation}) -- obliczenie gradientów funkcji straty względem wag i ich aktualizacja przy użyciu optymalizatora (np. Adam, SGD).
+\end{itemize}
+
+\noindent W projekcie zastosowano dodatkowe techniki poprawiające uczenie, takie jak:
+\begin{itemize}
+	\item \textbf{Wczesne zatrzymanie} (\textit{early stopping}) -- przerwanie uczenia, gdy błąd na zbiorze walidacyjnym przestaje maleć.
+	\item \textbf{Normalizacja danych} -- przekształcenie cech do podobnego zakresu wartości (np. przy użyciu StandardScaler).
+\end{itemize}
 \clearpage{}
 \section{Opis implementacji}
 
@@ -232,9 +276,14 @@ Plik ten stanowi główny komponent praktyczny systemu korekcji błędów i inte
   tak jak poprzednio, najistotniejsze są wnioski o charakterze uniwersalnym.}
 
 \begin{thebibliography}{0}
-	\bibitem{l2short} Wikipedia contributors. "Neural network (machine learning)."
+	\bibitem{nn} Wikipedia contributors. "Neural network (machine learning)."
 	Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia,
-	29 May. 2025. Web. 29 May. 2025. \end{thebibliography}
+	2025.
+
+	\bibitem{uwb} Wikipedia contributors. (2025, May 25). \textit{Ultra-wideband}.
+	In Wikipedia, The Free Encyclopedia. 2025
+
+\end{thebibliography}
 
 {\color{blue}
 Na końcu należy obowiązkowo podać cytowaną w sprawozdaniu literaturę, z której
