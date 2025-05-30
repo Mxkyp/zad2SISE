@@ -1,7 +1,7 @@
 import neuralNetwork as debilNetwork
 import DataLoader as dl
+import plotter as pl
 import torch
-import matplotlib.pyplot as plt
 
 df_testing = dl.load_all_data(dl.DYNAMIC)
 
@@ -40,18 +40,4 @@ with torch.no_grad():
 # Now you can calculate errors and plot as before
 errors = corrected_test - targets_test
 
-plt.figure(figsize=(12, 5))
-plt.subplot(1, 2, 1)
-plt.hist(errors[:, 0].numpy(), bins=50, color="blue", alpha=0.7)
-plt.xlabel("Error in X")
-plt.ylabel("Frequency")
-plt.title("Histogram of Correction Errors (X)")
-
-plt.subplot(1, 2, 2)
-plt.hist(errors[:, 1].numpy(), bins=50, color="blue", alpha=0.7)
-plt.xlabel("Error in Y")
-plt.ylabel("Frequency")
-plt.title("Histogram of Correction Errors (Y)")
-
-plt.tight_layout()
-plt.show()
+pl.plot_error_distributions(targets_test, corrected_test, "test")
