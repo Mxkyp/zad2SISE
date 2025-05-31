@@ -69,6 +69,7 @@ class DataLoader:
                     for file_path in static_files:
                         try:
                             df = pd.read_excel(file_path)
+                            df.dropna(inplace=True)
                             print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
                             all_data.append(df)
                         except Exception as e:
