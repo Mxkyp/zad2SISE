@@ -46,7 +46,8 @@ class NeuralNetwork(nn.Module):
         # Inicjalizacja wag - POPRAWKA
         self.apply(self._init_weights)
 
-    def _init_weights(self, module):
+    @staticmethod
+    def _init_weights(module):
         if isinstance(module, nn.Linear):
             # Używamy Xavier/Glorot initialization zamiast Kaiming dla lepszej stabilności
             nn.init.xavier_uniform_(module.weight)
@@ -74,6 +75,7 @@ class EnhancedNeuralNetworkModel:
         self.optimizer_type = optimizer
         self.momentum = momentum
         self.dropout_rate = dropout_rate
+        self.outlier_threshold = outlier_threshold
         self.outlier_detection = outlier_detection
         self.batch_size = batch_size
         self.id = id

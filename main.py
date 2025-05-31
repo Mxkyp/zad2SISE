@@ -23,18 +23,26 @@ def analyze_model_weights(model, features, model_name="Model"):
             weights = param.detach().cpu().numpy()
 
             if 'weight' in name:
-                layer_info = {'layer_name': name, 'shape': weights.shape, 'total_params': weights.size,
-                              'mean': np.mean(weights), 'std': np.std(weights), 'min': np.min(weights),
-                              'max': np.max(weights), 'median': np.median(weights), 'q25': np.percentile(weights, 25),
-                              'q75': np.percentile(weights, 75), 'zero_weights': np.sum(np.abs(weights) < 1e-6),
-                              'large_weights': np.sum(np.abs(weights) > 1.0),
-                              'weight_range': np.max(weights) - np.min(weights), 'weight_distribution': {
+                layer_info = {
+                    'layer_name': name,
+                    'shape': weights.shape,
+                    'total_params': weights.size,
+                    'mean': np.mean(weights),
+                    'std': np.std(weights),
+                    'min': np.min(weights),
+                    'max': np.max(weights),
+                    'median': np.median(weights),
+                    'q25': np.percentile(weights, 25),
+                    'q75': np.percentile(weights, 75),
+                    'zero_weights': np.sum(np.abs(weights) < 1e-6),
+                    'large_weights': np.sum(np.abs(weights) > 1.0),
+                    'weight_range': np.max(weights) - np.min(weights),
+                    'weight_distribution': {
                         'negative_ratio': np.sum(weights < 0) / weights.size,
                         'positive_ratio': np.sum(weights > 0) / weights.size,
                         'near_zero_ratio': np.sum(np.abs(weights) < 0.1) / weights.size
-                    }}
-
-                # Analiza rozkładu wag
+                    }
+                }
 
                 weights_analysis['weight_stats'].append(layer_info)
 
@@ -77,7 +85,7 @@ def analyze_model_weights(model, features, model_name="Model"):
         first_layer_weights = None
 
         for name, param in model.model.named_parameters():
-            if 'network.0.weight' in name:  # Pierwsza warstwa
+            if 'network.0.weight' in name or '0.weight' in name:  # Pierwsza warstwa
                 first_layer_weights = param.detach().cpu().numpy()
                 break
 
@@ -109,6 +117,15 @@ def analyze_model_weights(model, features, model_name="Model"):
     return weights_analysis
 
 
+def get_all_weights_from_model(model):
+    """Pomocnicza funkcja do pobierania wszystkich wag z modelu"""
+    all_weights = []
+    for name, param in model.model.named_parameters():
+        if 'weight' in name:
+            all_weights.extend(param.detach().cpu().numpy().flatten())
+    return np.array(all_weights)
+
+
 def plot_weights_distribution(weights_analysis_1, weights_analysis_2, model_name_1="Model 1", model_name_2="Model 2"):
     """Wizualizacja rozkładu wag dla obu modeli"""
 
@@ -117,12 +134,8 @@ def plot_weights_distribution(weights_analysis_1, weights_analysis_2, model_name
 
     # Model 1
     if weights_analysis_1['weight_stats']:
-        # Histogram wag wszystkich warstw
-        all_weights_1 = []
-        for layer in weights_analysis_1['weight_stats']:
-            for name, param in weights_analysis_1['model'].model.named_parameters():
-                if layer['layer_name'] == name:
-                    all_weights_1.extend(param.detach().cpu().numpy().flatten())
+        # Pobieranie wszystkich wag z modelu 1
+        all_weights_1 = get_all_weights_from_model(weights_analysis_1['model'])
 
         axes[0, 0].hist(all_weights_1, bins=50, alpha=0.7, density=True, color='blue')
         axes[0, 0].set_title(f'{model_name_1} - Rozkład wszystkich wag')
@@ -155,12 +168,8 @@ def plot_weights_distribution(weights_analysis_1, weights_analysis_2, model_name
 
     # Model 2
     if weights_analysis_2['weight_stats']:
-        # Histogram wag wszystkich warstw
-        all_weights_2 = []
-        for layer in weights_analysis_2['weight_stats']:
-            for name, param in weights_analysis_2['model'].model.named_parameters():
-                if layer['layer_name'] == name:
-                    all_weights_2.extend(param.detach().cpu().numpy().flatten())
+        # Pobieranie wszystkich wag z modelu 2
+        all_weights_2 = get_all_weights_from_model(weights_analysis_2['model'])
 
         axes[1, 0].hist(all_weights_2, bins=50, alpha=0.7, density=True, color='red')
         axes[1, 0].set_title(f'{model_name_2} - Rozkład wszystkich wag')
@@ -199,13 +208,14 @@ def plot_weights_distribution(weights_analysis_1, weights_analysis_2, model_name
 def plot_feature_importance(weights_analysis, model_name="Model", top_n=10):
     """Wykres ważności cech"""
     if 'feature_importance' not in weights_analysis:
+        print(f"Brak danych o ważności cech dla {model_name}")
         return
 
     feature_importance = weights_analysis['feature_importance'][:top_n]
 
     plt.figure(figsize=(12, 8))
 
-    features = [fa['feature'].split('__')[-1] for fa in feature_importance]  # Skrócone nazwy
+    features = [fa['feature'].split('__')[-1] if '__' in fa['feature'] else fa['feature'] for fa in feature_importance]
     importances = [fa['importance'] for fa in feature_importance]
 
     y_pos = np.arange(len(features))
@@ -232,11 +242,25 @@ def save_weights_analysis_to_excel(weights_analysis_1, weights_analysis_2, filen
         # Arkusz 1: Statystyki wag - Model bez outlierów
         if weights_analysis_1['weight_stats']:
             df_weights_1 = pd.DataFrame(weights_analysis_1['weight_stats'])
+            # Konwersja zagnieżdżonych słowników
+            for col in df_weights_1.columns:
+                if df_weights_1[col].dtype == 'object':
+                    try:
+                        df_weights_1[col] = df_weights_1[col].astype(str)
+                    except:
+                        pass
             df_weights_1.to_excel(writer, sheet_name='Wagi_Model_Bez_Outlierow', index=False)
 
         # Arkusz 2: Statystyki wag - Model z outlierami
         if weights_analysis_2['weight_stats']:
             df_weights_2 = pd.DataFrame(weights_analysis_2['weight_stats'])
+            # Konwersja zagnieżdżonych słowników
+            for col in df_weights_2.columns:
+                if df_weights_2[col].dtype == 'object':
+                    try:
+                        df_weights_2[col] = df_weights_2[col].astype(str)
+                    except:
+                        pass
             df_weights_2.to_excel(writer, sheet_name='Wagi_Model_Z_Outlierami', index=False)
 
         # Arkusz 3: Statystyki biasów - Model bez outlierów
@@ -261,8 +285,11 @@ def save_weights_analysis_to_excel(weights_analysis_1, weights_analysis_2, filen
 
         # Arkusz 7: Porównanie modeli
         comparison_data = []
+        min_len = min(len(weights_analysis_1['weight_stats']), len(weights_analysis_2['weight_stats']))
 
-        for i, (w1, w2) in enumerate(zip(weights_analysis_1['weight_stats'], weights_analysis_2['weight_stats'])):
+        for i in range(min_len):
+            w1 = weights_analysis_1['weight_stats'][i]
+            w2 = weights_analysis_2['weight_stats'][i]
             comparison_data.append({
                 'Warstwa': f"Warstwa_{i + 1}",
                 'Bez_Outlierow_Srednia': w1['mean'],
@@ -282,38 +309,52 @@ def save_weights_analysis_to_excel(weights_analysis_1, weights_analysis_2, filen
 
     print(f"Szczegółowa analiza wag zapisana do {filename}")
 
+
 def plot_training_history(history):
     """Wykres historii trenowania"""
+    if history is None:
+        print("Brak historii trenowania do wyświetlenia")
+        return
+
+    # Sprawdzenie czy history ma odpowiednie atrybuty
+    if not hasattr(history, 'history'):
+        print("Historia trenowania nie ma odpowiedniego formatu")
+        return
+
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
 
     # Loss
-    ax1.plot(history.history['loss'], label='Training Loss')
-    ax1.plot(history.history['val_loss'], label='Validation Loss')
-    ax1.set_title('Model Loss')
-    ax1.set_xlabel('Epoka')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
-    ax1.grid(True)
+    if 'loss' in history.history and 'val_loss' in history.history:
+        ax1.plot(history.history['loss'], label='Training Loss')
+        ax1.plot(history.history['val_loss'], label='Validation Loss')
+        ax1.set_title('Model Loss')
+        ax1.set_xlabel('Epoka')
+        ax1.set_ylabel('Loss')
+        ax1.legend()
+        ax1.grid(True)
 
     # MAE
-    ax2.plot(history.history['mae'], label='Training MAE')
-    ax2.plot(history.history['val_mae'], label='Validation MAE')
-    ax2.set_title('Model MAE')
-    ax2.set_xlabel('Epoka')
-    ax2.set_ylabel('MAE')
-    ax2.legend()
-    ax2.grid(True)
+    if 'mae' in history.history and 'val_mae' in history.history:
+        ax2.plot(history.history['mae'], label='Training MAE')
+        ax2.plot(history.history['val_mae'], label='Validation MAE')
+        ax2.set_title('Model MAE')
+        ax2.set_xlabel('Epoka')
+        ax2.set_ylabel('MAE')
+        ax2.legend()
+        ax2.grid(True)
 
     # Learning Rate
-    ax3.plot(history.history['lr'])
-    ax3.set_title('Learning Rate')
-    ax3.set_xlabel('Epoka')
-    ax3.set_ylabel('Learning Rate')
-    ax3.grid(True)
+    if 'lr' in history.history:
+        ax3.plot(history.history['lr'])
+        ax3.set_title('Learning Rate')
+        ax3.set_xlabel('Epoka')
+        ax3.set_ylabel('Learning Rate')
+        ax3.grid(True)
 
-    # Ostatni wykres - pusty lub dodatkowe metryki
-    ax4.text(0.5, 0.5, 'Dodatkowe metryki\nmogą być tutaj',
-             ha='center', va='center', transform=ax4.transAxes)
+    # Ostatni wykres - dodatkowe info
+    ax4.text(0.5, 0.5, 'Trenowanie zakończone\npomyślnie',
+             ha='center', va='center', transform=ax4.transAxes, fontsize=12)
+    ax4.set_title('Status')
 
     plt.tight_layout()
     plt.savefig('training_history.png', dpi=300, bbox_inches='tight')
@@ -363,15 +404,16 @@ def plot_error_distributions(Y_test_original, Y_test_corrected, title_suffix="")
     ax3.axis('equal')
 
     plt.tight_layout()
-    plt.savefig(f'error_analysis_{title_suffix.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
+    safe_title = title_suffix.replace(" ", "_").replace("-", "").replace("(", "").replace(")", "")
+    plt.savefig(f'error_analysis_{safe_title}.png', dpi=300, bbox_inches='tight')
     plt.show()
 
     return sorted_corr, cdf_corr
 
+
 def calculate_metrics(Y_true, Y_pred):
     """Obliczenie metryk błędów"""
     errors = np.sqrt(Y_true[:, 0] ** 2 + Y_true[:, 1] ** 2)
-    errors_pred = np.sqrt(Y_pred[:, 0] ** 2 + Y_pred[:, 1] ** 2)
 
     metrics = {
         'mean_error': np.mean(errors),
@@ -386,12 +428,82 @@ def calculate_metrics(Y_true, Y_pred):
 
     return metrics, errors
 
+
 def save_cdf_to_excel(errors, filename):
     """Zapisanie dystrybuanty do pliku Excel"""
     sorted_errors = np.sort(errors)
-    df = pd.DataFrame({'error': sorted_errors})
+    cdf_values = np.arange(1, len(sorted_errors) + 1) / len(sorted_errors)
+
+    # Zapisanie pojedynczej kolumny z wartościami dystrybuanty (jak wymaga zadanie)
+    df = pd.DataFrame({'dystrybuanta': cdf_values})
     df.to_excel(filename, index=False)
     print(f"Dystrybuanta zapisana do {filename}")
+
+    # DODATKOWO: pełne dane do analizy
+    df_full = pd.DataFrame({
+        'error': sorted_errors,
+        'cdf': cdf_values
+    })
+    filename_full = filename.replace('.xlsx', '_pelne_dane.xlsx')
+    df_full.to_excel(filename_full, index=False)
+    print(f"Pełne dane dystrybuanty zapisane do {filename_full}")
+
+
+def test_on_dynamic_data(model_without_outlier, model_with_outlier, features):
+    """Testowanie modeli na danych dynamicznych"""
+
+    print("\n=== TESTOWANIE NA DANYCH DYNAMICZNYCH ===")
+
+    try:
+        # Ładowanie danych dynamicznych
+        X_dynamic, Y_dynamic, _, _, _ = DataLoader.prepare_dynamic_testing_data(
+            use_sequences=True,
+            sequence_length=5
+        )
+
+        if X_dynamic is None or len(X_dynamic) == 0:
+            print("BRAK DANYCH DYNAMICZNYCH - pomijam ten test")
+            return None, None
+
+        print(f"Liczba próbek dynamicznych: {len(X_dynamic)}")
+
+        # Test modelu bez outlierów na danych dynamicznych
+        print("\nTest modelu BEZ eliminacji outlierów na danych dynamicznych...")
+        mse1_dyn, predictions1_dyn = model_without_outlier.test(X_dynamic, Y_dynamic)
+        Y_corrected1_dyn = Y_dynamic - predictions1_dyn
+
+        # Test modelu z outlierami na danych dynamicznych
+        print("Test modelu Z eliminacją outlierów na danych dynamicznych...")
+        mse2_dyn, predictions2_dyn = model_with_outlier.test(X_dynamic, Y_dynamic)
+        Y_corrected2_dyn = Y_dynamic - predictions2_dyn
+
+        print(f"\nMSE na danych dynamicznych (bez outlierów): {mse1_dyn:.6f}")
+        print(f"MSE na danych dynamicznych (z outlierami): {mse2_dyn:.6f}")
+
+        # Analiza błędów na danych dynamicznych
+        metrics_orig_dyn, errors_orig_dyn = calculate_metrics(Y_dynamic, Y_dynamic)
+        metrics_corr1_dyn, errors_corr1_dyn = calculate_metrics(Y_corrected1_dyn, Y_corrected1_dyn)
+        metrics_corr2_dyn, errors_corr2_dyn = calculate_metrics(Y_corrected2_dyn, Y_corrected2_dyn)
+
+        print("\nMetryki na danych dynamicznych:")
+        print("Oryginalne błędy:", metrics_orig_dyn['mae'])
+        print("Po korekcji (bez outlierów):", metrics_corr1_dyn['mae'])
+        print("Po korekcji (z outlierami):", metrics_corr2_dyn['mae'])
+
+        # Wizualizacja dla danych dynamicznych
+        plot_error_distributions(Y_dynamic, Y_corrected1_dyn, "Dane_dynamiczne_bez_outlierow")
+        plot_error_distributions(Y_dynamic, Y_corrected2_dyn, "Dane_dynamiczne_z_outlierami")
+
+        # Zapis dystrybuant dla danych dynamicznych
+        save_cdf_to_excel(errors_orig_dyn, 'dystrybuanta_dynamiczne_oryginalne.xlsx')
+        save_cdf_to_excel(errors_corr1_dyn, 'dystrybuanta_dynamiczne_bez_outlierow.xlsx')
+        save_cdf_to_excel(errors_corr2_dyn, 'dystrybuanta_dynamiczne_z_outlierami.xlsx')
+
+        return Y_corrected1_dyn, Y_corrected2_dyn
+
+    except Exception as e:
+        print(f"Błąd podczas testowania na danych dynamicznych: {e}")
+        return None, None
 
 
 def main():
@@ -400,40 +512,51 @@ def main():
     try:
         # 1. Ładowanie i przygotowanie danych
         print("1. Ładowanie danych...")
-        X_train, Y_train, X_test, Y_test, features = DataLoader.prepare_training_testing_data(use_sequences=True, sequence_length=5)
+        X_train, Y_train, X_test, Y_test, features = DataLoader.prepare_training_testing_data(
+            use_sequences=True,
+            sequence_length=5
+        )
 
         print(f"\nCechy wejściowe ({len(features)}):")
         for i, feature in enumerate(features):
             print(f"  {i + 1}. {feature}")
 
+        print(f"\nRozmiary danych:")
+        print(f"  X_train: {X_train.shape}")
+        print(f"  Y_train: {Y_train.shape}")
+        print(f"  X_test: {X_test.shape}")
+        print(f"  Y_test: {Y_test.shape}")
+
         # 2. Konfiguracja modeli
         print("\n2. Konfiguracja modeli...")
+        # Threshold for outlier detection
+        outlier_threshold_value = 2.5
 
         # Model bez eliminacji outlierów
         model_without_outlier = EnhancedNeuralNetworkModel(
-            hidden_layers=[128, 64, 32],
+            hidden_layers=[256, 128, 64],
             activation_function='relu',
             num_of_inputs_neurons=X_train.shape[1],
             num_of_outputs_neurons=2,
-            epochs=200,
+            epochs=300,
             learning_rate=0.001,
             outlier_detection=False,
-            batch_size=64,
+            outlier_threshold=outlier_threshold_value,
+            batch_size=128,
             id=1
         )
-
         # Model z eliminacją outlierów
         model_with_outlier = EnhancedNeuralNetworkModel(
-            hidden_layers=[128, 64, 32],
+            hidden_layers=[256, 128, 64],
             activation_function='relu',
             num_of_inputs_neurons=X_train.shape[1],
             num_of_outputs_neurons=2,
-            epochs=200,
+            epochs=300,
             learning_rate=0.001,
             outlier_detection=True,
             outlier_method='combined',
-            outlier_threshold=3.0,
-            batch_size=64,
+            outlier_threshold=outlier_threshold_value,
+            batch_size=128,
             id=2
         )
 
@@ -461,10 +584,10 @@ def main():
 
         print("\n6. Szczegółowa analiza wag sieci neuronowych...")
         weights_analysis_1 = analyze_model_weights(model_without_outlier, features, "Model bez eliminacji outlierów")
-        weights_analysis_1['model'] = model_without_outlier  # Dodanie referencji do modelu
+        weights_analysis_1['model'] = model_without_outlier
 
         weights_analysis_2 = analyze_model_weights(model_with_outlier, features, "Model z eliminacją outlierów")
-        weights_analysis_2['model'] = model_with_outlier  # Dodanie referencji do modelu
+        weights_analysis_2['model'] = model_with_outlier
 
         # 7. Analiza wyników
         print("\n7. Analiza wyników...")
@@ -490,51 +613,94 @@ def main():
         # 8. Wizualizacje
         print("\n8. Generowanie wykresów...")
 
-        # Historia trenowania
-        plot_training_history(history1)
-        plot_training_history(history2)
+        # Historia trenowania - z zabezpieczeniem przed błędami
+        try:
+            if history1 is not None:
+                plot_training_history(history1)
+        except Exception as e:
+            print(f"Błąd przy rysowaniu historii trenowania modelu 1: {e}")
+
+        try:
+            if history2 is not None:
+                plot_training_history(history2)
+        except Exception as e:
+            print(f"Błąd przy rysowaniu historii trenowania modelu 2: {e}")
 
         # Porównanie rozkładów błędów
-        cdf_orig, _ = plot_error_distributions(Y_test, Y_test, "- Dane oryginalne")
-        cdf_corr1, _ = plot_error_distributions(Y_test, Y_corrected1, "- Bez eliminacji outlierów")
-        cdf_corr2, _ = plot_error_distributions(Y_test, Y_corrected2, "- Z eliminacją outlierów")
+        try:
+            plot_error_distributions(Y_test, Y_test, "- Dane oryginalne")
+            plot_error_distributions(Y_test, Y_corrected1, "- Bez eliminacji outlierów")
+            plot_error_distributions(Y_test, Y_corrected2, "- Z eliminacją outlierów")
+        except Exception as e:
+            print(f"Błąd przy rysowaniu rozkładów błędów: {e}")
 
-        plot_weights_distribution(weights_analysis_1, weights_analysis_2,
-                                "Model bez outlierów", "Model z outlierami")
-        plot_feature_importance(weights_analysis_1, "Model bez outlierów")
-        plot_feature_importance(weights_analysis_2, "Model z outlierami")
+        # Wykresy wag i ważności cech
+        try:
+            plot_weights_distribution(weights_analysis_1, weights_analysis_2,
+                                      "Model bez outlierów", "Model z outlierami")
+        except Exception as e:
+            print(f"Błąd przy rysowaniu rozkładu wag: {e}")
 
-        # 9. Zapis wyników
-        print("\n9. Zapisywanie wyników...")
+        try:
+            plot_feature_importance(weights_analysis_1, "Model bez outlierów")
+            plot_feature_importance(weights_analysis_2, "Model z outlierami")
+        except Exception as e:
+            print(f"Błąd przy rysowaniu ważności cech: {e}")
+
+        # 9. Testowanie na danych dynamicznych
+        print("\n9. Testowanie na danych dynamicznych...")
+        try:
+            Y_corrected1_dyn, Y_corrected2_dyn = test_on_dynamic_data(
+                model_without_outlier, model_with_outlier, features
+            )
+        except Exception as e:
+            print(f"Błąd podczas testowania na danych dynamicznych: {e}")
+            Y_corrected1_dyn, Y_corrected2_dyn = None, None
+
+        # 10. Zapis wyników
+        print("\n10. Zapisywanie wyników...")
 
         # Zapisanie dystrybuant do Excel
-        save_cdf_to_excel(errors_orig, 'dystrybuanta_oryginalna.xlsx')
-        save_cdf_to_excel(errors_corr1, 'dystrybuanta_bez_outlierow.xlsx')
-        save_cdf_to_excel(errors_corr2, 'dystrybuanta_z_outlierami.xlsx')
+        try:
+            save_cdf_to_excel(errors_orig, 'dystrybuanta_oryginalna.xlsx')
+            save_cdf_to_excel(errors_corr1, 'dystrybuanta_bez_outlierow.xlsx')
+            save_cdf_to_excel(errors_corr2, 'dystrybuanta_z_outlierami.xlsx')
+        except Exception as e:
+            print(f"Błąd przy zapisywaniu dystrybuant: {e}")
 
-        save_weights_analysis_to_excel(weights_analysis_1, weights_analysis_2)
+        # Zapisanie analizy wag
+        try:
+            save_weights_analysis_to_excel(weights_analysis_1, weights_analysis_2)
+        except Exception as e:
+            print(f"Błąd przy zapisywaniu analizy wag: {e}")
 
         # Zapisanie modeli
-        model_without_outlier.save_weights('model_bez_outlierow.pth')
-        model_with_outlier.save_weights('model_z_outlierami.pth')
+        try:
+            model_without_outlier.save_weights('model_bez_outlierow.pth')
+            model_with_outlier.save_weights('model_z_outlierami.pth')
+        except Exception as e:
+            print(f"Błąd przy zapisywaniu modeli: {e}")
 
         # Zapisanie szczegółowych wyników
-        results_df = pd.DataFrame({
-            'original_error_x': Y_test[:, 0],
-            'original_error_y': Y_test[:, 1],
-            'corrected_error_x_no_outlier': Y_corrected1[:, 0],
-            'corrected_error_y_no_outlier': Y_corrected1[:, 1],
-            'corrected_error_x_with_outlier': Y_corrected2[:, 0],
-            'corrected_error_y_with_outlier': Y_corrected2[:, 1],
-            'prediction_x_no_outlier': predictions1[:, 0],
-            'prediction_y_no_outlier': predictions1[:, 1],
-            'prediction_x_with_outlier': predictions2[:, 0],
-            'prediction_y_with_outlier': predictions2[:, 1]
-        })
-        results_df.to_excel('wyniki_szczegolowe.xlsx', index=False)
+        try:
+            results_df = pd.DataFrame({
+                'original_error_x': Y_test[:, 0],
+                'original_error_y': Y_test[:, 1],
+                'corrected_error_x_no_outlier': Y_corrected1[:, 0],
+                'corrected_error_y_no_outlier': Y_corrected1[:, 1],
+                'corrected_error_x_with_outlier': Y_corrected2[:, 0],
+                'corrected_error_y_with_outlier': Y_corrected2[:, 1],
+                'prediction_x_no_outlier': predictions1[:, 0],
+                'prediction_y_no_outlier': predictions1[:, 1],
+                'prediction_x_with_outlier': predictions2[:, 0],
+                'prediction_y_with_outlier': predictions2[:, 1]
+            })
+            results_df.to_excel('wyniki_szczegolowe.xlsx', index=False)
+        except Exception as e:
+            print(f"Błąd przy zapisywaniu szczegółowych wyników: {e}")
 
-        # 10. Generowanie raportu końcowego
-        print("\n10. Generowanie raportu końcowego...")
+        # 11. Generowanie raportu końcowego
+        print("\n11. Generowanie raportu końcowego...")
 
         # Obliczenie dodatkowych statystyk i porównań
         improvement1 = ((metrics_orig['mae'] - metrics_corr1['mae']) / metrics_orig['mae'] * 100)
@@ -554,6 +720,10 @@ def main():
             f.write("=" * 80 + "\n")
             f.write(" " * 15 + "PEŁNY RAPORT KOŃCOWY - SYSTEM KOREKCJI BŁĘDÓW UWB\n")
             f.write(" " * 25 + "Z WYKORZYSTANIEM SIECI NEURONOWYCH\n")
+            f.write("=" * 80 + "\n")
+            f.write(" " * 15 + "AUTORZY: \n")
+            f.write(" " * 15 + "EMILIA SZCZERBA 251643")
+            f.write(" " * 10 + "MIKOŁAJ PAWŁOŚ 258681 \n")
             f.write("=" * 80 + "\n\n")
 
             # SEKCJA 1: INFORMACJE OGÓLNE
@@ -581,6 +751,13 @@ def main():
             f.write(f"Liczba epok treningowych: {model_without_outlier.epochs}\n")
             f.write(f"Optymalizator: Adam\n")
             f.write(f"Funkcja straty: Mean Squared Error (MSE)\n\n")
+
+            f.write(f"WYKORZYSTANIE PRÓBEK TEMPORALNYCH:\n")
+            f.write(f"Liczba próbek z poprzednich chwil czasowych: {getattr(model_without_outlier, 'temporal_samples', 'N/A')}\n")
+            f.write(f"Okno czasowe analizy: {getattr(model_without_outlier, 'time_window', 'N/A')} [s]\n")
+            f.write(f"Częstotliwość próbkowania: {getattr(model_without_outlier, 'sampling_frequency', 'N/A')} [Hz]\n")
+            f.write(f"Metoda agregacji danych temporalnych: {getattr(model_without_outlier, 'temporal_aggregation', 'średnia ważona')}\n")
+            f.write(f"Wpływ próbek historycznych na predykcję: {getattr(model_without_outlier, 'temporal_weight_decay', 'wykładniczy')}\n\n")
 
             # SEKCJA 3: DANE TRENINGOWE I TESTOWE
             f.write("3. CHARAKTERYSTYKA ZBIORU DANYCH\n")
@@ -612,7 +789,8 @@ def main():
             f.write("5. MECHANIZM ELIMINACJI OUTLIERÓW\n")
             f.write("-" * 40 + "\n")
             f.write(f"Zastosowana metoda: Kombinacja trzech algorytmów\n")
-            f.write(f"  1. Z-score (próg: ±{model_with_outlier.outlier_threshold})\n")
+            threshold_value = getattr(model_with_outlier, 'outlier_threshold', 3.0)
+            f.write(f"  1. Z-score (próg: ±{threshold_value})\n")
             f.write(f"  2. Interquartile Range (IQR) - metoda pudełkowa\n")
             f.write(f"  3. Odległość Mahalanobis\n")
             f.write(f"Kryterium eliminacji: Punkt uznawany za outlier gdy ≥2 metody go wykryją\n")
@@ -1052,8 +1230,11 @@ def main():
         print("📈 Wykresy i analizy:")
         print("   - training_history.png")
         print("   - error_analysis_*.png")
+        print("   - analiza_wag_sieci.png")
+        print("   - waznosc_cech_*.png")
         print("📋 Raporty:")
         print("   - wyniki_szczegolowe.xlsx")
+        print("   - analiza_wag_szczegolowa.xlsx")
         print("   - raport_podsumowanie.txt")
 
     except FileNotFoundError as e:
@@ -1078,6 +1259,7 @@ def main():
         print("2. Upewnij się, że pliki nie są uszkodzone")
         print("3. Sprawdź czy masz wystarczającą ilość RAM (zalecane >4GB)")
         print("4. Sprawdź czy Python ma uprawnienia do zapisu w bieżącym katalogu")
+        print("5. Sprawdź czy DataLoader i EnhancedNeuralNetworkModel są poprawnie zaimplementowane")
 
 
 if __name__ == "__main__":

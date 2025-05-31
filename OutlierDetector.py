@@ -11,7 +11,8 @@ class OutlierDetector:
         self.threshold = threshold
         self.scaler = StandardScaler()
 
-    def detect_outliers_zscore(self, data, threshold=3.0):
+    @staticmethod
+    def detect_outliers_zscore(data, threshold=3.0):
         """Detekcja outlierów metodą Z-score"""
         try:
             # Sprawdź czy dane zawierają NaN lub inf
@@ -31,7 +32,7 @@ class OutlierDetector:
 
             z_scores = np.abs(stats.zscore(data, axis=0, nan_policy='omit'))
 
-            # Sprawdź czy z_scores zawiera NaN
+            # Sprawdź, czy z_scores zawiera NaN
             if np.any(np.isnan(z_scores)):
                 print("Z-scores zawierają NaN - zastępuję zerami")
                 z_scores = np.nan_to_num(z_scores, nan=0.0)
@@ -41,7 +42,8 @@ class OutlierDetector:
             print(f"Błąd w Z-score: {e}")
             return np.zeros(len(data), dtype=bool)
 
-    def detect_outliers_iqr(self, data):
+    @staticmethod
+    def detect_outliers_iqr(data):
         """Detekcja outlierów metodą IQR"""
         try:
             # Sprawdź czy dane zawierają NaN lub inf

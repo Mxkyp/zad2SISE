@@ -1,3 +1,11 @@
 dane/
 .idea/
 
+idea/
+.dane/
+__pycache__/
+__pycache__
+.__pycache__/
+./idea/
+./dane/
+./__pycache__/
