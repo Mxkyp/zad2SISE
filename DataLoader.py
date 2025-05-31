@@ -18,6 +18,30 @@ class DataLoader:
         return os.path.join(os.path.dirname(__file__), 'dane')
 
     @staticmethod
+    def create_sequences(X, Y, sequence_length=5):
+        """Tworzy sekwencje czasowe z danych"""
+        if len(X) < sequence_length:
+            print(f"Za mało danych dla sekwencji długości {sequence_length}")
+            return X, Y
+
+        X_seq = []
+        Y_seq = []
+
+        for i in range(sequence_length, len(X)):
+            # Sekwencja poprzednich próbek
+            seq = X[i - sequence_length:i].flatten()
+            X_seq.append(seq)
+            Y_seq.append(Y[i])
+
+        X_sequences = np.array(X_seq)
+        Y_sequences = np.array(Y_seq)
+
+        print(f"Utworzono sekwencje: {X_sequences.shape} -> {Y_sequences.shape}")
+        print(f"Każda próbka zawiera {sequence_length} poprzednich chwil czasowych")
+
+        return X_sequences, Y_sequences
+
+    @staticmethod
     def load_data_excel():
         """Ładowanie danych z plików Excel"""
         base_path = DataLoader.get_base_path()
@@ -92,6 +116,8 @@ class DataLoader:
                     for file_path in dynamic_files:
                         try:
                             df = pd.read_excel(file_path)
+                            if 'timestamp' in df.columns:
+                                df = df.sort_values('timestamp')
                             print(f"  Załadowano {os.path.basename(file_path)}: {len(df)} próbek")
                             all_data.append(df)
                         except Exception as e:
@@ -119,6 +145,8 @@ class DataLoader:
 
             if all_data:
                 combined_data = pd.concat(all_data, ignore_index=True)
+                if 'timestamp' in combined_data.columns:
+                    combined_data = combined_data.sort_values('timestamp').reset_index(drop=True)
                 print(f"Łącznie próbek dynamicznych: {len(combined_data)}")
                 return combined_data
             else:
@@ -131,7 +159,7 @@ class DataLoader:
         return static_df, dynamic_df
 
     @staticmethod
-    def prepare_data_excel(df):
+    def prepare_data_excel(df, use_sequences=False, sequence_length=5):
         """Przygotowanie danych z formatu Excel"""
         if df is None or df.empty:
             print("Brak danych do przetworzenia!")
@@ -192,15 +220,20 @@ class DataLoader:
         df_clean["error_y"] = df_clean["data__coordinates__y"] - df_clean["reference__y"]
         Y = df_clean[["error_x", "error_y"]].values
 
+        if use_sequences and sequence_length > 1:
+            X, Y = DataLoader.create_sequences(X, Y, sequence_length)
+
         print(f"Kształt danych X: {X.shape}")
         print(f"Kształt danych Y: {Y.shape}")
+        if use_sequences:
+            print(f"Sekwencje czasowe: długość={sequence_length}, próbek z historią={len(X)}")
         print(f"Średni błąd X: {np.mean(np.abs(Y[:, 0])):.4f}")
         print(f"Średni błąd Y: {np.mean(np.abs(Y[:, 1])):.4f}")
 
         return X, Y, available_features
 
     @staticmethod
-    def prepare_training_testing_data():
+    def prepare_training_testing_data(use_sequences=False, sequence_length=5):
         """Główna metoda do przygotowania danych treningowych i testowych"""
         print("=== ŁADOWANIE DANYCH ===")
 
@@ -213,18 +246,21 @@ class DataLoader:
             raise Exception("Nie udało się załadować danych dynamicznych (testowych)")
 
         print("\n=== PRZETWARZANIE DANYCH TRENINGOWYCH ===")
-        X_train, Y_train, features_train = DataLoader.prepare_data_excel(static_df)
+        X_train, Y_train, features_train = DataLoader.prepare_data_excel(static_df, use_sequences, sequence_length)
 
         print("\n=== PRZETWARZANIE DANYCH TESTOWYCH ===")
-        X_test, Y_test, features_test = DataLoader.prepare_data_excel(dynamic_df)
+        X_test, Y_test, features_test = DataLoader.prepare_data_excel(dynamic_df, use_sequences, sequence_length)
 
         if X_train is None or Y_train is None:
             raise Exception("Błąd przetwarzania danych treningowych")
+
         if X_test is None or Y_test is None:
             raise Exception("Błąd przetwarzania danych testowych")
 
         print(f"\n=== PODSUMOWANIE ===")
         print(f"Dane treningowe: {X_train.shape[0]} próbek, {X_train.shape[1]} cech")
         print(f"Dane testowe: {X_test.shape[0]} próbek, {X_test.shape[1]} cech")
+        if use_sequences:
+            print(f"Sekwencje czasowe: {sequence_length} poprzednich chwil na próbkę")
 
         return X_train, Y_train, X_test, Y_test, features_train

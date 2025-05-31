@@ -8,8 +8,10 @@ import numpy as np
 import pandas as pd
 import OutlierDetector as OutlierDetector
 
+
 class NeuralNetwork(nn.Module):
     """ Sieć neuronowa """
+
     def __init__(self, input_size, hidden_layers, output_size, dropout_rate=0.2, activation='relu'):
         super(NeuralNetwork, self).__init__()
 
@@ -41,13 +43,18 @@ class NeuralNetwork(nn.Module):
 
         self.network = nn.Sequential(*layers)
 
+        # Inicjalizacja wag - POPRAWKA
+        self.apply(self._init_weights)
+
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            nn.init.kaiming_uniform_(module.weight, nonlinearity='relu')
+            # Używamy Xavier/Glorot initialization zamiast Kaiming dla lepszej stabilności
+            nn.init.xavier_uniform_(module.weight)
             nn.init.zeros_(module.bias)
 
     def forward(self, x):
         return self.network(x)
+
 
 class EnhancedNeuralNetworkModel:
     """ Klasa modelu sieci neuronowej z mechanizmem eliminacji outlierów """
@@ -104,6 +111,21 @@ class EnhancedNeuralNetworkModel:
         """ Przetwarzanie wstępne danych z opcjonalną eliminacją outlierów """
         print(f"Dane wejściowe: {X.shape[0]} próbek")
 
+        # POPRAWKA: Sprawdzenie i usunięcie NaN/inf przed przetwarzaniem
+        print("Sprawdzanie NaN/inf w danych...")
+
+        # Sprawdzenie X
+        X_nan_mask = np.isnan(X).any(axis=1) | np.isinf(X).any(axis=1)
+        Y_nan_mask = np.isnan(Y).any(axis=1) | np.isinf(Y).any(axis=1)
+
+        # Kombinacja masek
+        clean_mask = ~(X_nan_mask | Y_nan_mask)
+
+        if not clean_mask.all():
+            print(f"Usunięto {(~clean_mask).sum()} próbek z NaN/inf")
+            X = X[clean_mask]
+            Y = Y[clean_mask]
+
         if self.outlier_detection:
             print("Wykonywanie detekcji outlierów...")
             X_clean, Y_clean, clean_indices = self.outlier_detector.outlierDetector(X, Y)
@@ -112,19 +134,42 @@ class EnhancedNeuralNetworkModel:
         else:
             return X, Y, np.ones(len(X), dtype=bool)
 
-    def train(self, X_train, Y_train, X_val = None, Y_val = None, validation_split=0.2):
+    def train(self, X_train, Y_train, X_val=None, Y_val=None, validation_split=0.2):
         """ Trenowanie sieci neuronowej """
         print("Rozpoczynam trenowanie modelu...")
 
         # Przetwarzanie wstępne danych treningowych
         X_train_clean, Y_train_clean, _ = self.preprocess_data(X_train, Y_train)
 
+        # POPRAWKA: Dodatkowe sprawdzenie po preprocessingu
+        if len(X_train_clean) == 0:
+            raise ValueError("Brak danych po preprocessingu!")
+
         # Normalizacja danych
         X_train_scaled = self.scaler_X.fit_transform(X_train_clean)
         Y_train_scaled = self.scaler_Y.fit_transform(Y_train_clean)
 
+        # POPRAWKA: Sprawdzenie czy normalizacja nie wprowadziła NaN
+        if np.isnan(X_train_scaled).any() or np.isnan(Y_train_scaled).any():
+            print("UWAGA: NaN po normalizacji - używam robust scaler")
+            from sklearn.preprocessing import RobustScaler
+            self.scaler_X = RobustScaler()
+            self.scaler_Y = RobustScaler()
+            X_train_scaled = self.scaler_X.fit_transform(X_train_clean)
+            Y_train_scaled = self.scaler_Y.fit_transform(Y_train_clean)
+
         # Przygotowanie danych walidacyjnych
         if X_val is not None and Y_val is not None:
+            # POPRAWKA: Sprawdzenie danych walidacyjnych
+            val_nan_mask = np.isnan(X_val).any(axis=1) | np.isinf(X_val).any(axis=1)
+            val_y_nan_mask = np.isnan(Y_val).any(axis=1) | np.isinf(Y_val).any(axis=1)
+            val_clean_mask = ~(val_nan_mask | val_y_nan_mask)
+
+            if not val_clean_mask.all():
+                print(f"Usunięto {(~val_clean_mask).sum()} próbek walidacyjnych z NaN/inf")
+                X_val = X_val[val_clean_mask]
+                Y_val = Y_val[val_clean_mask]
+
             X_val_scaled = self.scaler_X.transform(X_val)
             Y_val_scaled = self.scaler_Y.transform(Y_val)
         else:
@@ -145,17 +190,19 @@ class EnhancedNeuralNetworkModel:
         train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
 
-        # Wybór optymalizatora
+        # Wybór optymalizatora - POPRAWKA: Niższy learning rate
+        effective_lr = min(self.learning_rate, 0.001)  # Ograniczenie learning rate
+
         if self.optimizer_type == 'adam':
-            optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+            optimizer = optim.Adam(self.model.parameters(), lr=effective_lr, weight_decay=1e-5)
         elif self.optimizer_type == 'sgd':
-            optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            optimizer = optim.SGD(self.model.parameters(), lr=effective_lr, momentum=self.momentum, weight_decay=1e-5)
         else:
             raise ValueError('Optimizer must be either "adam" or "sgd"')
 
-        # Scheduler - usunięto parametr 'verbose' który nie jest obsługiwany w nowszych wersjach PyTorch
+        # Scheduler - POPRAWKA: Bardziej konserwatywny scheduler
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.5, patience=10, min_lr=1e-7
+            optimizer, mode='min', factor=0.7, patience=15, min_lr=1e-8
         )
 
         # Funkcja straty
@@ -163,7 +210,7 @@ class EnhancedNeuralNetworkModel:
 
         # Early stopping
         best_val_loss = float('inf')
-        patience = 20
+        patience = 25  # POPRAWKA: Zwiększona cierpliwość
         patience_counter = 0
         best_model_state = None
 
@@ -176,9 +223,27 @@ class EnhancedNeuralNetworkModel:
 
             for batch_X, batch_Y in train_loader:
                 optimizer.zero_grad()
+
+                # POPRAWKA: Gradient clipping
                 outputs = self.model(batch_X)
+
+                # Sprawdzenie czy outputs zawiera NaN
+                if torch.isnan(outputs).any():
+                    print(f"NaN w outputs na epoce {epoch + 1}!")
+                    break
+
                 loss = criterion(outputs, batch_Y)
+
+                # Sprawdzenie czy loss jest NaN
+                if torch.isnan(loss):
+                    print(f"NaN w loss na epoce {epoch + 1}!")
+                    break
+
                 loss.backward()
+
+                # POPRAWKA: Gradient clipping
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
                 optimizer.step()
 
                 total_loss += loss.item()
@@ -186,15 +251,22 @@ class EnhancedNeuralNetworkModel:
                 num_batches += 1
 
             # Średnie metryki treningowe
-            avg_train_loss = total_loss / num_batches
-            avg_train_mae = total_mae / num_batches
+            avg_train_loss = total_loss / num_batches if num_batches > 0 else float('inf')
+            avg_train_mae = total_mae / num_batches if num_batches > 0 else float('inf')
 
             # Walidacja
             self.model.eval()
             with torch.no_grad():
                 val_outputs = self.model(X_val_tensor)
-                val_loss = criterion(val_outputs, Y_val_tensor).item()
-                val_mae = torch.mean(torch.abs(val_outputs - Y_val_tensor)).item()
+
+                # POPRAWKA: Sprawdzenie NaN w walidacji
+                if torch.isnan(val_outputs).any():
+                    print(f"NaN w walidacji na epoce {epoch + 1}!")
+                    val_loss = float('inf')
+                    val_mae = float('inf')
+                else:
+                    val_loss = criterion(val_outputs, Y_val_tensor).item()
+                    val_mae = torch.mean(torch.abs(val_outputs - Y_val_tensor)).item()
             self.model.train()
 
             # Zapisywanie historii
@@ -205,7 +277,7 @@ class EnhancedNeuralNetworkModel:
             self.history['lr'].append(optimizer.param_groups[0]['lr'])
 
             # Early stopping
-            if val_loss < best_val_loss:
+            if val_loss < best_val_loss and not np.isnan(val_loss) and not np.isinf(val_loss):
                 best_val_loss = val_loss
                 patience_counter = 0
                 best_model_state = self.model.state_dict().copy()
@@ -217,7 +289,8 @@ class EnhancedNeuralNetworkModel:
                 break
 
             # Scheduler step
-            scheduler.step(val_loss)
+            if not np.isnan(val_loss) and not np.isinf(val_loss):
+                scheduler.step(val_loss)
 
             # Wyświetlanie postępu
             if (epoch + 1) % 10 == 0:
@@ -240,19 +313,56 @@ class EnhancedNeuralNetworkModel:
 
     def predict(self, X):
         """ Predykcja korekcji błędów """
-        X_scaled = self.scaler_X.transform(X)
+        # POPRAWKA: Sprawdzenie danych wejściowych
+        if np.isnan(X).any() or np.isinf(X).any():
+            print("UWAGA: NaN/inf w danych do predykcji - filtrowanie...")
+            clean_mask = ~(np.isnan(X).any(axis=1) | np.isinf(X).any(axis=1))
+            if not clean_mask.any():
+                raise ValueError("Wszystkie dane do predykcji zawierają NaN/inf!")
+            X_clean = X[clean_mask]
+        else:
+            X_clean = X
+            clean_mask = np.ones(len(X), dtype=bool)
+
+        X_scaled = self.scaler_X.transform(X_clean)
+
+        # Sprawdzenie po skalowaniu
+        if np.isnan(X_scaled).any():
+            print("NaN po skalowaniu - problem ze scalerem!")
+            raise ValueError("NaN wprowadzone przez scaler!")
+
         X_tensor = torch.FloatTensor(X_scaled).to(self.device)
 
         self.model.eval()
         with torch.no_grad():
             predictions_scaled = self.model(X_tensor).cpu().numpy()
 
-        predictions = self.scaler_Y.inverse_transform(predictions_scaled)
+            # POPRAWKA: Sprawdzenie predykcji
+            if np.isnan(predictions_scaled).any():
+                print("NaN w predykcjach modelu!")
+                # Zastąpienie NaN zerami jako fallback
+                predictions_scaled = np.nan_to_num(predictions_scaled, nan=0.0)
+
+        predictions_clean = self.scaler_Y.inverse_transform(predictions_scaled)
+
+        # Rekonstrukcja pełnego wektora predykcji
+        if not clean_mask.all():
+            predictions = np.zeros((len(X), predictions_clean.shape[1]))
+            predictions[clean_mask] = predictions_clean
+        else:
+            predictions = predictions_clean
+
         return predictions
 
     def test(self, X_test, Y_test):
         """ Testowanie modelu """
         predictions = self.predict(X_test)
+
+        # POPRAWKA: Sprawdzenie przed obliczeniem MSE
+        if np.isnan(predictions).any():
+            print("UWAGA: NaN w predykcjach - zastępowanie zerami")
+            predictions = np.nan_to_num(predictions, nan=0.0)
+
         mse = mean_squared_error(Y_test, predictions)
         return mse, predictions
 

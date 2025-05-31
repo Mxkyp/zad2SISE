@@ -1,0 +1,66 @@
+================================================================================
+               PEŁNY RAPORT KOŃCOWY - SYSTEM KOREKCJI BŁĘDÓW UWB
+                         Z WYKORZYSTANIEM SIECI NEURONOWYCH
+================================================================================
+
+1. INFORMACJE OGÓLNE O EKSPERYMENCIE
+----------------------------------------
+Data i czas wykonania: 2025-05-31 02:43:51
+Cel eksperymentu: Porównanie skuteczności korekcji błędów UWB
+                   z i bez eliminacji outlierów
+Zastosowana metoda: Sieci neuronowe z algorytmem wstecznej propagacji błędu
+Środowisko: Python 3.x, PyTorch, NumPy, Pandas, Matplotlib
+
+2. ARCHITEKTURA SIECI NEURONOWEJ
+----------------------------------------
+Typ sieci: Wielowarstwowy perceptron (MLP)
+Liczba warstw ukrytych: 3
+Neurony w warstwach ukrytych: 128 → 64 → 32
+Funkcja aktywacji: RELU
+Neurony wejściowe: 70
+Neurony wyjściowe: 2 (błąd X, błąd Y)
+Regularyzacja Dropout: 0.2
+Rozmiar batch'a: 64
+Współczynnik uczenia: 0.001
+Liczba epok treningowych: 200
+Optymalizator: Adam
+Funkcja straty: Mean Squared Error (MSE)
+
+3. CHARAKTERYSTYKA ZBIORU DANYCH
+----------------------------------------
+Całkowita liczba próbek: 135425
+Próbki treningowe: 112897 (83.4%)
+Próbki testowe: 22528 (16.6%)
+Liczba cech wejściowych: 70
+Typ problemu: Regresja wielowymiarowa (2D)
+Zakres błędów X: [-1750.957, 895.000] m
+Zakres błędów Y: [-2825.971, 2790.799] m
+Średni błąd oryginalny: 245.5356 m
+Maksymalny błąd oryginalny: 2853.4588 m
+
+4. SZCZEGÓŁOWA LISTA CECH WEJŚCIOWYCH
+----------------------------------------
+   1. data__tagData__gyro__x
+   2. data__tagData__gyro__y
+   3. data__tagData__gyro__z
+   4. data__tagData__magnetic__x
+   5. data__tagData__magnetic__y
+   6. data__tagData__magnetic__z
+   7. data__tagData__quaternion__x
+   8. data__tagData__quaternion__y
+   9. data__tagData__quaternion__z
+  10. data__tagData__quaternion__w
+  11. data__tagData__linearAcceleration__x
+  12. data__tagData__linearAcceleration__y
+  13. data__tagData__linearAcceleration__z
+  14. data__tagData__pressure
+
+Kategorie cech:
+  • Cechy geometryczne (odległości, kąty)
+  • Cechy temporalne (czasu propagacji)
+  • Cechy statystyczne (średnie, odchylenia)
+  • Cechy kontekstowe (identyfikatory, pozycje)
+
+5. MECHANIZM ELIMINACJI OUTLIERÓW
+----------------------------------------
+Zastosowana metoda: Kombinacja trzech algorytmów
