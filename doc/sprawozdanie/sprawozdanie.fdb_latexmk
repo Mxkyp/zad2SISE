@@ -1,5 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1748850912.95048 "sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748850916.99954 2
+["pdflatex"] 1748896734.09795 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748896735.89507 2
+  "./sprawozdanie.tex" 1748896730.60241 14661 eb02185f5244d5a79654f84415d8c0bc ""
   "/etc/texmf/web2c/texmf.cnf" 1741769514 43179 d4d8625c4224f516afc2b9ae03b45f2d ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plit.enc" 1136849721 1946 62ba825cda1ff16dbaa60d53ac60525a ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plrm.enc" 1136849721 1944 1845592c00bbe510359fd6887a83ff72 ""
@@ -67,8 +68,8 @@
   "gestoscBl.png" 1748849322.42148 58299 6faf6dd26eb40a1673260f7d9507d816 ""
   "nn.png" 1748804030.75014 184869 63a25c34a0157a5656d758e1bd159378 ""
   "rozkladBl.png" 1748849285.19945 101161 6bb5eb247aeeffc5e110c1e6d6689a52 ""
-  "sprawozdanie.aux" 1748850916.95415 3276 80a028e4eff06872d2d2bbc05335dd15 "pdflatex"
-  "sprawozdanie.tex" 1748850903.98162 15179 04742fa9ea9e67781ebf6d1f0ea633fd ""
+  "sprawozdanie.aux" 1748896735.84668 3161 ea8eb8b2d3d3f0dd677bf5ef20a0d0c1 "pdflatex"
+  "sprawozdanie.tex" 1748896730.60241 14661 eb02185f5244d5a79654f84415d8c0bc ""
   "uwb.png" 1748804030.75714 245490 8e5e3efec9914a702ef83605f4fc484f ""
   (generated)
   "sprawozdanie.aux"

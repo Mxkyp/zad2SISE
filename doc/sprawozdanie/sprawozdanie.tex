@@ -121,8 +121,6 @@ Projekt został podzielony na następujące pliki:
 
 	\item \texttt{NeuralNetworkModel.py} – główny moduł modelu uczenia maszynowego opartego na sieci neuronowej. Odpowiada za tworzenie, trenowanie, testowanie i zapisywanie modelu, z uwzględnieniem mechanizmów detekcji outlierów i normalizacji danych.
 
-	\item \texttt{OutlierDetector.py} – moduł odpowiedzialny za identyfikację obserwacji odstających w danych wejściowych. Wspiera różne metody detekcji, m.in. oparte na odległości Mahalanobisa czy odchyleniu standardowym.
-
 	\item \texttt{main.py} – plik uruchomieniowy, zawierający konfigurację eksperymentów, wczytywanie danych, inicjalizację modelu oraz zapisywanie wyników i metryk. Stanowi punkt wejścia do całego systemu.
 
 \end{enumerate}
@@ -152,7 +150,7 @@ Plik \texttt{NeuralNetworkModel.py} zawiera kompletną implementację modelu sie
 Moduł składa się z dwóch głównych klas:
 \begin{itemize}
 	\item \texttt{NeuralNetwork} – definiuje architekturę wielowarstwowej sieci neuronowej typu \textit{feedforward} z konfigurowalną liczbą warstw ukrytych, funkcją aktywacji i mechanizmem \texttt{Dropout}.
-	\item \texttt{EnhancedNeuralNetworkModel} – klasa wyższego poziomu integrująca funkcje uczenia, walidacji, normalizacji danych, predykcji oraz obsługi danych odstających przy użyciu zewnętrznego modułu \texttt{OutlierDetector}.
+	\item \texttt{EnhancedNeuralNetworkModel} – klasa wyższego poziomu integrująca funkcje uczenia, walidacji, normalizacji danych, predykcji.
 \end{itemize}
 
 \paragraph{}
@@ -162,6 +160,7 @@ Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępn
 
 Architektura modelu jest w pełni parametryzowana: użytkownik może zdefiniować liczbę neuronów wejściowych, wyjściowych, strukturę warstw ukrytych, liczbę epok, współczynnik uczenia, funkcję aktywacji, metodę detekcji outlierów, a także urządzenie obliczeniowe (\texttt{CPU} lub \texttt{GPU}).
 
+\clearpage{}
 \subsubsection*{Architektura modelu bez eliminacji wartości odstających}
 
 Po wielu eksperymentach, metodą prób i błędów, zdecydowaliśmy się na zastosowanie poniższej architektury sieci neuronowej.
@@ -187,10 +186,9 @@ Funkcja \texttt{main()} zawiera pełny pipeline systemu korekcji i składa się 
 \begin{enumerate}
 	\item Wczytanie danych uczących i testowych przy pomocy klasy \texttt{DataLoader}.
 
-	\item Utworzenie i trenowanie dwóch modeli sieci neuronowych:
+	\item Utworzenie i trenowanie modelu:
 	      \begin{itemize}
 		      \item bez usuwania wartości odstających (outlierów),
-		      \item z eliminacją outlierów przy użyciu złożonej metody detekcji.
 	      \end{itemize}
 
 	\item Przewidywanie błędów przez modele, ich odejmowanie od danych wejściowych oraz ocena skuteczności korekcji.
@@ -202,30 +200,17 @@ Funkcja \texttt{main()} zawiera pełny pipeline systemu korekcji i składa się 
 	\item Zapis wytrenowanych modeli w formacie PyTorch (\texttt{.pth}).
 \end{enumerate}
 
-\subsubsection*{Efekty działania i generowane pliki}
-
-W wyniku działania programu generowane są:
-
-\begin{itemize}
-	\item Wykresy: \texttt{training\_history.png}, \texttt{error\_analysis\_*.png},
-	\item Modele: \texttt{model\_bez\_outlierow.pth}, \texttt{model\_z\_outlierami.pth},
-	\item Dane wyjściowe: \texttt{dystrybuanta\_*.xlsx}, \texttt{wyniki\_szczegolowe.xlsx},
-
-	      \texttt{raport\_podsumowanie.txt}.
-\end{itemize}
-
 Plik ten stanowi główny komponent praktyczny systemu korekcji błędów i integruje cały proces od wczytania danych po ocenę skuteczności modelu.
 
 \section{Materiały i metody}
- {\color{blue}
-  W tym miejscu należy opisać, jak przeprowadzone zostały wszystkie badania,
-  których wyniki i dyskusja zamieszczane są w dalszych sekcjach. Opis ten
-  powinien być na tyle dokładny, aby osoba czytająca go potrafiła wszystkie
-  przeprowadzone badania samodzielnie powtórzyć w celu zweryfikowania ich
-  poprawności. Przy opisie należy odwoływać się i stosować do
-  opisanych w sekcji drugiej wzorów i oznaczeń, a także w jasny sposób opisać
-  cel konkretnego testu. Najlepiej byłoby wyraźnie wyszczególnić (ponumerować)
-  poszczególne eksperymenty tak, aby łatwo było się do nich odwoływać dalej.}
+Badanie zostało przeprowadzone w następujących etapach:
+\begin{enumerate}
+	\item Wczytano dane statyczne, które posłużyły jako dane treningowe.
+	\item Przeprowadzono proces uczenia modeli.
+	\item Wczytano dane dynamiczne, które posłużyły jako dane testowe.
+	\item Wykonano próbę korekcji, a następnie porównano uzyskane wyniki z oryginalnymi błędami oraz danymi referencyjnymi.
+	\item Opracowano odpowiednie wykresy i tabele oraz sporządzono raport z uzyskanych wyników.
+\end{enumerate}
 
 \clearpage{}
 \section{Wyniki} {
@@ -276,15 +261,21 @@ Plik ten stanowi główny komponent praktyczny systemu korekcji błędów i inte
 \clearpage{}
 
 \section{Dyskusja}
-Z uzyskanych wyników widzimy że rozkład błędów stał się bardziej "precyzyjny" (Rys. 4),
-oraz że zmniejszyła się gęstość występowania błędów w zakresie ok. 0 - 350 (Rysunek 3).
-Dystrybuanta ogólnie zmieniła się negatywnie z jedynie nieznaczną poprawą na zakresie podanym wyżej.
+
+Na podstawie uzyskanych wyników można zauważyć, że rozkład błędów stał się bardziej \textit{precyzyjny} (rys.4), a gęstość występowania błędów w zakresie około 0–350 uległa zmniejszeniu(rys.3)
+
+Dystrybuanta ogólna zmieniła się w sposób niekorzystny, z jedynie nieznaczną poprawą w wyżej wymienionym zakresie. Podjęto próbę eliminacji tzw. \textit{outlierów} (błędów o bardzo dużych wartościach), jednakże uzyskane wyniki były na tyle niesatysfakcjonujące, że zdecydowano się je pominąć.
+
+Zadanie uznajemy za zakończone \textbf{sukcesem}, gdyż zdobyliśmy podstawową wiedzę na temat sieci neuronowych oraz uzyskaliśmy zadowalające rezultaty, biorąc pod uwagę ambitne podejście do postawionego problemu.
 
 \section{Wnioski}
- {\color{blue}
-  W tej, przedostatniej, sekcji należy zamieścić podsumowanie najważniejszych
-  wniosków z sekcji poprzedniej. Najlepiej jest je po prostu wypunktować. Znów,
-  tak jak poprzednio, najistotniejsze są wnioski o charakterze uniwersalnym.}
+
+\begin{itemize}
+	\item Gęstość błędów w newralgicznym zakresie 0–350 została zmniejszona.
+	\item Próba eliminacji ekstremalnych wartości błędów (\textit{outlierów}) nie przyniosła poprawy jakości wyników.
+	\item Projekt przyczynił się do pogłębienia wiedzy na temat działania i trenowania sieci neuronowych.
+	\item Rozproszenie błędów uległo zmniejszeniu w okolicach puntku (0,0).
+\end{itemize}
 
 \begin{thebibliography}{0}
 	\bibitem{nn} Wikipedia contributors. "Neural network (machine learning)."
@@ -295,9 +286,5 @@ Dystrybuanta ogólnie zmieniła się negatywnie z jedynie nieznaczną poprawą n
 	In Wikipedia, The Free Encyclopedia. 2025
 
 \end{thebibliography}
-
-{\color{blue}
-Na końcu należy obowiązkowo podać cytowaną w sprawozdaniu literaturę, z której
-grupa korzystała w trakcie prac nad zadaniem.}
 
 \end{document}

@@ -2,7 +2,7 @@ PWD /home/mxkcpy/code/studia/SISE/doc/sprawozdanie
 INPUT /etc/texmf/web2c/texmf.cnf
 INPUT /usr/share/texmf/web2c/texmf.cnf
 INPUT /var/lib/texmf/web2c/pdftex/pdflatex.fmt
-INPUT sprawozdanie.tex
+INPUT ./sprawozdanie.tex
 OUTPUT sprawozdanie.log
 INPUT ./classrep.cls
 INPUT classrep.cls
