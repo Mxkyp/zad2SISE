@@ -1,6 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1748631365.32883 "./sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748631369.26756 2
-  "./sprawozdanie.tex" 1748631364.39866 16378 2d079b095440c1dbe01b5e22c95713b2 ""
+["pdflatex"] 1748850912.95048 "sprawozdanie.tex" "sprawozdanie.pdf" "sprawozdanie" 1748850916.99954 2
   "/etc/texmf/web2c/texmf.cnf" 1741769514 43179 d4d8625c4224f516afc2b9ae03b45f2d ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plit.enc" 1136849721 1946 62ba825cda1ff16dbaa60d53ac60525a ""
   "/usr/share/texmf/fonts/enc/dvips/pl/plrm.enc" 1136849721 1944 1845592c00bbe510359fd6887a83ff72 ""
@@ -63,11 +62,14 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1741769514 43179 d4d8625c4224f516afc2b9ae03b45f2d ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1748445745 665995 b94e419f3e76d4fb1ca40c567e154e7c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1748445726 3165197 68fdff49e8927b84855913b37ddd19a6 ""
-  "classrep.cls" 1748626000.49685 2516 6cfcfe56e7ef3589ddf29da5789a508a ""
-  "nn.png" 1748626000.49876 184869 63a25c34a0157a5656d758e1bd159378 ""
-  "sprawozdanie.aux" 1748631369.22233 2577 62660f6ac121890a16a4d6e97301e580 "pdflatex"
-  "sprawozdanie.tex" 1748631364.39866 16378 2d079b095440c1dbe01b5e22c95713b2 ""
-  "uwb.png" 1748630432.30212 245490 8e5e3efec9914a702ef83605f4fc484f ""
+  "classrep.cls" 1748804030.74982 2516 6cfcfe56e7ef3589ddf29da5789a508a ""
+  "dystrb.png" 1748849203.69815 65476 e9e5ae87e54cc63bbc1c713a8100677a ""
+  "gestoscBl.png" 1748849322.42148 58299 6faf6dd26eb40a1673260f7d9507d816 ""
+  "nn.png" 1748804030.75014 184869 63a25c34a0157a5656d758e1bd159378 ""
+  "rozkladBl.png" 1748849285.19945 101161 6bb5eb247aeeffc5e110c1e6d6689a52 ""
+  "sprawozdanie.aux" 1748850916.95415 3276 80a028e4eff06872d2d2bbc05335dd15 "pdflatex"
+  "sprawozdanie.tex" 1748850903.98162 15179 04742fa9ea9e67781ebf6d1f0ea633fd ""
+  "uwb.png" 1748804030.75714 245490 8e5e3efec9914a702ef83605f4fc484f ""
   (generated)
   "sprawozdanie.aux"
   "sprawozdanie.log"

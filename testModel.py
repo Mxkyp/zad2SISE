@@ -1,4 +1,5 @@
 import neuralNetwork as debilNetwork
+import NeutralNetworkModel as mdl
 import DataLoader as dl
 import plotter as pl
 import torch
@@ -25,8 +26,7 @@ targets_test = torch.tensor(
 )
 
 # 1. Recreate the model architecture exactly as before
-model = debilNetwork.CorrectionNet()
-
+model = mdl.EnhancedNeuralNetworkModel()
 # 2. Load the saved parameters
 model.load_state_dict(torch.load("correction_model.pth"))
 
@@ -40,4 +40,4 @@ with torch.no_grad():
 # Now you can calculate errors and plot as before
 errors = corrected_test - targets_test
 
-pl.plot_error_distributions(targets_test, corrected_test, "test")
+pl.plot_error_distributions(targets_test, corrected_test, inputs_test, "test")

@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_error_distributions(Y_test_original, Y_test_corrected, title_suffix=""):
+def plot_error_distributions(
+    Y_test_original, Y_test_corrected, Y_test_uncorrected, title_suffix=""
+):
     """Porównanie rozkładów błędów przed i po korekcji"""
 
     # Obliczenie błędów absolutnych
@@ -36,13 +38,22 @@ def plot_error_distributions(Y_test_original, Y_test_corrected, title_suffix="")
     ax2.legend()
     ax2.grid(True)
 
-    # Scatter plot błędów X vs Y
+    # Scatter plot błędów X vs Y (dodane: uncorrected)
+    ax3.scatter(
+        Y_test_uncorrected[:, 0],
+        Y_test_uncorrected[:, 1],
+        alpha=0.5,
+        label="Przed korekcją modelu",
+        s=1,
+        color="gray",
+    )
     ax3.scatter(
         Y_test_original[:, 0],
         Y_test_original[:, 1],
         alpha=0.5,
-        label="Przed korekcją",
+        label="Przed korekcją końcową",
         s=1,
+        color="blue",
     )
     ax3.scatter(
         Y_test_corrected[:, 0],
@@ -50,6 +61,7 @@ def plot_error_distributions(Y_test_original, Y_test_corrected, title_suffix="")
         alpha=0.5,
         label="Po korekcji",
         s=1,
+        color="orange",
     )
     ax3.set_xlabel("Błąd X [m]")
     ax3.set_ylabel("Błąd Y [m]")

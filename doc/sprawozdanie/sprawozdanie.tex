@@ -162,40 +162,18 @@ Trening odbywa się z użyciem biblioteki PyTorch, a dane wejściowe są wstępn
 
 Architektura modelu jest w pełni parametryzowana: użytkownik może zdefiniować liczbę neuronów wejściowych, wyjściowych, strukturę warstw ukrytych, liczbę epok, współczynnik uczenia, funkcję aktywacji, metodę detekcji outlierów, a także urządzenie obliczeniowe (\texttt{CPU} lub \texttt{GPU}).
 
-\clearpage{}
-\subsection{Plik \texttt{OutlierDetector.py}}
+\subsubsection*{Architektura modelu bez eliminacji wartości odstających}
 
-Moduł \texttt{OutlierDetector.py} zawiera klasę \texttt{OutlierDetector}, która odpowiada za identyfikację oraz usuwanie odstających obserwacji (ang. \textit{outliers}) w danych wejściowych i wyjściowych modeli regresyjnych. Celem tego modułu jest poprawa jakości danych poprzez eliminację punktów, które mogą negatywnie wpłynąć na proces uczenia lub predykcji.
+Po wielu eksperymentach, metodą prób i błędów, zdecydowaliśmy się na zastosowanie poniższej architektury sieci neuronowej.
 
-\paragraph{}
-\textbf{Obsługiwane metody detekcji outlierów}:
 \begin{itemize}
-	\item \textbf{Z-score} – klasyczna metoda statystyczna oparta na standaryzacji zmiennych i analizie ich odchyleń od średniej.
-	\item \textbf{IQR (Interquartile Range)} – metoda oparta na analizie rozstępu międzykwartylowego (dolna i górna granica = $Q1 - 1.5 \cdot IQR$, $Q3 + 1.5 \cdot IQR$).
-	\item \textbf{Isolation Forest} – metoda oparta na modelu lasu losowego izolującego punkty anomalne.
-	\item \textbf{Odległość Mahalanobisa} – metoda uwzględniająca współzmienność danych i odległość od centroidu wielowymiarowego.
-	\item \textbf{Combined} – strategia łącząca wyniki trzech metod (Z-score, IQR, Mahalanobis); punkt uznawany jest za outlier, jeśli zostanie wykryty przez co najmniej dwie z nich.
-\end{itemize}
-
-\paragraph{}
-\textbf{Kluczowe cechy klasy \texttt{OutlierDetector}}:
-\begin{itemize}
-	\item Obsługuje brakujące dane (NaN, inf) poprzez ich czyszczenie lub zastępowanie medianą.
-	\item Uwzględnia błędy obliczeń numerycznych (np. osobliwość macierzy kowariancji).
-	\item Zawiera system awaryjny: w przypadku błędu w jednej metodzie, automatycznie używana jest metoda Z-score jako domyślna.
-	\item Dostarcza pełną analizę statystyczną: liczba wykrytych outlierów, procentowy udział oraz rozmiar zbioru po filtracji.
-\end{itemize}
-
-\paragraph{}
-\textbf{Główne metody klasy}:
-\begin{itemize}
-	\item \texttt{detect\_outliers\_zscore(data, threshold)} – detekcja przy użyciu standaryzacji i progu odcięcia.
-	\item \texttt{detect\_outliers\_iqr(data)} – detekcja oparta na kwartylach.
-	\item \texttt{detect\_outliers\_isolation\_forest(data)} – detekcja z wykorzystaniem modelu \texttt{IsolationForest}.
-	\item \texttt{detect\_outliers\_mahalanobis(data)} – detekcja w oparciu o wielowymiarową odległość Mahalanobisa.
-	\item \texttt{detect\_outliers(X, Y)} – metoda główna, wykonująca detekcję na połączonych danych wejściowych i wyjściowych.
-	\item \texttt{filter\_data(X, Y)} – zwraca przefiltrowane dane z usuniętymi outlierami.
-	\item \texttt{outlierDetector(X, Y)} – metoda pomocnicza, kompatybilna z interfejsem używanym w kodzie sieci neuronowej.
+	\item Liczba warstw ukrytych: 3
+	\item Liczba neuronów w warstwach: 256, 128, 64
+	\item Funkcja aktywacji: ReLU (Rectified Linear Unit)
+	\item Liczba neuronów wyjściowych: 2
+	\item Liczba epok: 300
+	\item Rozmiar partii (batch size): 128
+	\item Współczynnik uczenia (learning rate): 0{,}001
 \end{itemize}
 
 \clearpage{}
@@ -249,27 +227,58 @@ Plik ten stanowi główny komponent praktyczny systemu korekcji błędów i inte
   cel konkretnego testu. Najlepiej byłoby wyraźnie wyszczególnić (ponumerować)
   poszczególne eksperymenty tak, aby łatwo było się do nich odwoływać dalej.}
 
-\section{Wyniki}
- {\color{blue}
-  W tej sekcji należy zaprezentować, dla każdego przeprowadzonego eksperymentu,
-  kompletny zestaw wyników w postaci tabel, wykresów (preferowane) itp. Powinny
-  być one tak ponazywane, aby było wiadomo, do czego się odnoszą. Wszystkie
-  tabele i wykresy należy oczywiście opisać (opisać co jest na osiach, w
-  kolumnach itd.) stosując się do przyjętych wcześniej oznaczeń. Nie należy tu
-  komentować i interpretować wyników, gdyż miejsce na to jest w kolejnej sekcji.
-  Tu również dobrze jest wprowadzić oznaczenia (tabel, wykresów), aby móc się do
-  nich odwoływać poniżej.}
+\clearpage{}
+\section{Wyniki} {
+  \begin{figure}[h!]
+	  \centering
+	  \includegraphics[scale=0.40]{gestoscBl.png}
+	  \caption{Rozkład błędów po korekcji}
+	  \label{fig:density}
+  \end{figure}
+  \begin{figure}[h!]
+	  \centering
+	  \includegraphics[scale=0.40]{rozkladBl.png}
+	  \caption{Rozproszenie błedów x, y}
+	  \label{fig:błedyXY}
+  \end{figure}
+  \begin{figure}[h!]
+	  \centering
+	  \includegraphics[scale=0.40]{dystrb.png}
+	  \caption{zmiana dystrybuanty}
+	  \label{fig:dystrybuanta}
+  \end{figure}
+  \begin{table}[ht]
+	  \centering
+	  \caption{Wagi cech sieci neuronowej}
+	  \begin{tabular}{|c|l|r|}
+		  \hline
+		  \textbf{\#} & \textbf{cecha}                             & \textbf{waga} \\
+		  \hline
+		  1           & data\_\_tagData\_\_linearAcceleration\_\_y & 0.159497      \\
+		  2           & data\_\_tagData\_\_quaternion\_\_x         & 0.150790      \\
+		  3           & data\_\_tagData\_\_linearAcceleration\_\_x & 0.143811      \\
+		  4           & data\_\_tagData\_\_quaternion\_\_y         & 0.143303      \\
+		  5           & data\_\_tagData\_\_magnetic\_\_x           & 0.137812      \\
+		  6           & data\_\_tagData\_\_quaternion\_\_z         & 0.132061      \\
+		  7           & data\_\_tagData\_\_magnetic\_\_z           & 0.129842      \\
+		  8           & data\_\_tagData\_\_quaternion\_\_w         & 0.121032      \\
+		  9           & data\_\_tagData\_\_pressure                & 0.120398      \\
+		  10          & data\_\_tagData\_\_magnetic\_\_y           & 0.111724      \\
+		  11          & data\_\_tagData\_\_gyro\_\_z               & 0.067959      \\
+		  12          & data\_\_tagData\_\_linearAcceleration\_\_z & 0.067480      \\
+		  13          & data\_\_tagData\_\_gyro\_\_y               & 0.047070      \\
+		  14          & data\_\_tagData\_\_gyro\_\_x               & 0.041198      \\
+		  \hline
+	  \end{tabular}
+	  \label{tab:nn_weights}
+  \end{table}
+ }
+\clearpage{}
 
 \section{Dyskusja}
- {\color{blue}
-  Sekcja ta powinna zawierać dokładną interpretację uzyskanych wyników
-  eksperymentów wraz ze szczegółowymi wnioskami z nich płynącymi. Najcenniejsze
-  są, rzecz jasna, wnioski o charakterze uniwersalnym, które mogą być istotne
-  przy innych, podobnych zadaniach. Należy również omówić i wyjaśnić wszystkie
-  napotkane problemy (jeśli takie były). Każdy wniosek powinien mieć poparcie we
-  wcześniej przeprowadzonych eksperymentach (odwołania do konkretnych wyników).
-  Jest to jedna z najważniejszych sekcji tego sprawozdania, gdyż prezentuje
-  poziom zrozumienia badanego problemu.}
+Z uzyskanych wyników widzimy że rozkład błędów stał się bardziej "precyzyjny" (Rys. 4),
+oraz że zmniejszyła się gęstość występowania błędów w zakresie ok. 0 - 350 (Rysunek 3).
+Dystrybuanta ogólnie zmieniła się negatywnie z jedynie nieznaczną poprawą na zakresie podanym wyżej.
 
 \section{Wnioski}
  {\color{blue}
